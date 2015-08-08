@@ -51,7 +51,9 @@ World.prototype.initialize = function() {
     this.light.position.set( 1, 20, -20 );
     this.scene.add( this.light );
 
-    this.camera.position.z = -5;
+    this.camera.position.x = -0;
+    this.camera.position.y = -5;
+    this.camera.position.z = -0;
     this.camera.lookAt(new THREE.Vector3(0,0,0));
 
 }
