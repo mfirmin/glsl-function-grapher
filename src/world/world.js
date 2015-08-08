@@ -1,7 +1,3 @@
-
-
-var THREE = require('../lib/three.min.js');
-
 var Box      = require('../entity/box');
 var Cylinder = require('../entity/cylinder');
 var Sphere   = require('../entity/sphere');
@@ -51,12 +47,27 @@ World.prototype.initialize = function() {
     this.light.position.set( 1, 20, -20 );
     this.scene.add( this.light );
 
+    /*
     this.camera.position.x = -0;
     this.camera.position.y = -5;
-    this.camera.position.z = -0;
-    this.camera.lookAt(new THREE.Vector3(0,0,0));
+    */
+    this.camera.position.z = 5;
 
-}
+    controls = new THREE.TrackballControls( this.camera );
+   // controls.target.set( 0, 0, 0 );
+
+    controls.rotateSpeed = 20.0;
+    controls.zoomSpeed = 1.2;
+ //   controls.panSpeed = 0.8;
+
+    controls.noZoom = false;
+//    controls.noPan = false;
+
+    controls.staticMoving = true;
+    controls.dynamicDampingFactor = 0.3;
+
+    this.controls = controls;
+};
 
 World.prototype.initializeDiv = function() {
 
@@ -158,6 +169,7 @@ World.prototype.go = function() {
 
     var renderLoop = function() {
         this.renderer.render(this.scene, this.camera);
+        this.controls.update();
         if (!(this.paused)) { setTimeout(renderLoop, 1000/30); }
     }.bind(this)
 

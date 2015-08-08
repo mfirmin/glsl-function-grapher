@@ -1,5 +1,4 @@
 
-var THREE = require('../lib/three.min.js');
 
 function Entity(name, opts) {
 

@@ -1,5 +1,4 @@
 
-var THREE = require('../lib/three.min.js');
 var Entity = require('./entity');
 
 function Plane(name, A, B, opts) {

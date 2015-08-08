@@ -1,5 +1,4 @@
 
-var THREE = require('../lib/three.min.js');
 var Entity = require('./entity');
 
 function Cylinder(name, radius, height, opts) {
