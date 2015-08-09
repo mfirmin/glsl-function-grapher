@@ -31,7 +31,7 @@ function makeFragmentShader(fn) {
 
             'vec3 rskip = normalize(rd)*stepsize;\n'+
 
-            'float I = 0.;\n'+
+            'vec3 I = vec3(0.,0.,0.);\n'+
             'int intersects = 0;\n'+
 
             'float last = 0.0;'+
@@ -66,14 +66,10 @@ function makeFragmentShader(fn) {
                     'if (opacity >= 1.) {\n'+
                         'gl_FragColor = vec4(vec3(1.,1.,1.)*(pt.xyz/2.+.5), 1.);\n'+
                         'return;\n'+
-                    '}\n'+
-                    
-                    /*
-                    'else {\n'+
-                        'I += abs(dot(norm, normalize(lightsource-pt)));\n'+
+                    '} else {\n'+
+                        'I += vec3(1.,1.,1.)*(pt.xyz/2.+.5);\n'+
                         'intersects++;\n'+
                     '}\n'+
-                    */
                         
                 '}\n'+
                 'last = curr;\n'+
@@ -81,7 +77,8 @@ function makeFragmentShader(fn) {
             '}\n'+
 
             'if ( opacity < 1.) {\n'+
-                'gl_FragColor = vec4(vec3(1.,1.,1.)*(I/float(intersects)),1.);\n'+ 
+                'if (I == vec3(0.,0.,0.)) { gl_FragColor = vec4(1.,1.,1.,1.); return; }\n'+
+                'gl_FragColor = vec4((I/float(intersects)),1.);\n'+ 
                 'return;\n'+
             '}\n'+
             'gl_FragColor = vec4(1.,1.,1.,1.);\n'+
@@ -118,7 +115,7 @@ uniforms['lightsource'] = {type: 'v3', value: new THREE.Vector3(10, 10, -30)};
 // Stepsize for sampling... 1 seems a good compromise between real-time shading and quality
 // on my MBP
 uniforms['stepsize'] = {type: 'f', value: .01};
-uniforms['opacity'] = {type: 'f', value: 1.};
+uniforms['opacity'] = {type: 'f', value: 0.5};
 uniforms['surface'] = {type: 'f', value: 0.};
 
 var material = new THREE.ShaderMaterial( { 
@@ -141,11 +138,16 @@ function updateShader(fn) {
     box.opts.material.needsUpdate = true;
 }
 
+function setOpacity(val) {
+    uniforms['opacity'].value = val;
+}
+
 world.go();
 
 //window.functiongrapher = world.panel;
 window.world = world;
 window.updateShader = updateShader;
+window.setOpacity = setOpacity;
 
 
 $(window).resize(function() {
