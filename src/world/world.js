@@ -91,8 +91,6 @@ World.prototype.setSize = function() {
     var w = $(this.opts.element).width();
     var h = $(this.opts.element).height();
 
-    console.log(w, h);
-
     this.canvas.width(w);
     this.canvas.height(h);
 

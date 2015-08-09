@@ -19,27 +19,6 @@ function makeFragmentShader(fn) {
 
         fn +
 
-        // Solely used for lighting..., maybe estimate the gradient somehow if we want the user
-        // to be able to input their own fns.
-        'vec3 gradClebsch(vec3 pt) {\n' +
-            'float x = pt.x; float y = -pt.y; float z = -pt.z;\n'+
-            'return vec3('+
-                    '81.*(3.*x*x)-189.*(2.*x*y+2.*x*z+y*y+z*z)+54.*y*z+126.*(y+z)-9.*2.*x-9.,'+
-                    '81.*(3.*y*y)-189.*(2.*x*y+2.*y*z+x*x+z*z)+54.*x*z+126.*(x+z)-9.*2.*y-9.,'+
-                    '81.*(3.*z*z)-189.*(2.*z*y+2.*x*z+x*x+y*y)+54.*x*y+126.*(x+y)-9.*2.*z-9.'+
-            ');\n'+
-        '}\n'+
-        
-        // Kiss Surface.
-        'float funcKiss(vec3 pt) {\n' +
-            'float x = pt.x; float y = -pt.y; float z = -pt.z;\n'+
-            'return z*z*z*z - z*z*z*z*z - x*x - y*y;\n'+
-        '}\n' +
-        'vec3 gradKiss(vec3 pt) {\n' +
-            'float x = pt.x; float y = -pt.y; float z = -pt.z;\n'+
-            'return vec3(-2.*x, -2.*y, 4.*z*z*z - 5.*z*z*z*z);\n'+
-        '}\n'+
-
         'void main() {' + 
             'vec3 ro = cameraPosition;\n'+
             'vec3 dir = vPosition.xyz - ro;\n'+
