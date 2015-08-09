@@ -9752,26 +9752,10 @@ function makeFragmentShader(fn) {
                     'gl_FragColor = vec4(0.,0.,0.,1.); return;\n'+
                 '}\n'+
                 'float curr = 0.;\n'+
-                'if (surface == 0.) { curr = fn(pt.x, pt.y, pt.z); } else { curr = funcKiss(pt); }\n'+
+                'curr = fn(pt.x, pt.y, pt.z);\n'+
 
                 'if (last*curr < 0.) {\n'+
                     'vec3 grad = vec3(0.,0.,0.);\n'+
-                    'if (surface == 0.) { grad = gradClebsch(pt); } else { grad = gradKiss(pt); }\n'+
-                    'float mag = length(grad);\n'+
-                    'vec3 norm = vec3(0.,0.,0.);\n'+
-                    'if (mag > 0.) {\n'+
-                        'norm = grad*1./mag;\n'+
-                    '}\n'+
-                    'if (dot(norm, cameraPosition - pt) < 0.) {\n'+
-                        'norm = norm*-1.;\n'+
-                    '}\n'+
-                    
-                    /*
-                    'if (opacity >= 1.) {\n'+
-                        'gl_FragColor = vec4(vec3(1.,1.,1.)*abs(dot(norm, normalize(lightsource-pt))), 1.);\n'+
-                        'return;\n'+
-                    '}\n'+
-                    */
 
                      // Gradient-less coloring?
                     'if (opacity >= 1.) {\n'+
@@ -9779,10 +9763,12 @@ function makeFragmentShader(fn) {
                         'return;\n'+
                     '}\n'+
                     
+                    /*
                     'else {\n'+
                         'I += abs(dot(norm, normalize(lightsource-pt)));\n'+
                         'intersects++;\n'+
                     '}\n'+
+                    */
                         
                 '}\n'+
                 'last = curr;\n'+
