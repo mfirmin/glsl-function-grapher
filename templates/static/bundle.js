@@ -9832,7 +9832,6 @@ world.addEntity(box);
 
 function updateShader(fn) {
     var fragShader = makeFragmentShader(fn);
-    console.log(fragShader);
     box.opts.material.fragmentShader = fragShader;
     box.opts.material.needsUpdate = true;
 }
