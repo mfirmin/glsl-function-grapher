@@ -9704,20 +9704,18 @@ var Box   = require('./entity/box');
 
 var world = new World('raytracer', {element: '#grapher'});
 
+function makeFragmentShader(fn) {
 
-    fShader = 
+    var fShader = '' +
         'varying vec4 vPosition;\n'+
         'uniform vec3 lightsource;\n'+
         'uniform float stepsize;\n'+
         'uniform float opacity;\n'+
         'uniform float surface;\n'+
         // Describe ROI as a sphere later?
-        'float func(vec3 pt) {\n' +
-            'float x = pt.x; float y = -pt.y; float z = -pt.z;\n'+
-            'return 81.*(x*x*x + y*y*y + z*z*z) - '+ 
-                '189.*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + '+
-                '54.*(x*y*z) + 126.*(x*y+x*z+y*z) - 9.*(x*x+y*y+z*z) - 9.*(x+y+z) + 1.;\n' +
-        '}\n' +
+
+        fn +
+
         // Solely used for lighting..., maybe estimate the gradient somehow if we want the user
         // to be able to input their own fns.
         'vec3 gradClebsch(vec3 pt) {\n' +
@@ -9756,9 +9754,28 @@ var world = new World('raytracer', {element: '#grapher'});
 
             'float last = 0.0;'+
             'for (int i = 0; i < 1000; i++) {\n'+
+                // outside roi case.
                 'if (pt.z < -1.001 || pt.z > 1.001 || pt.x < -1.001 || pt.x > 1.001 || pt.y > 1.001 || pt.y < -1.001) { break; }\n'+
+                // plot outline
+                'if (    (pt.z > .99 && pt.y > .99) ||\n'+
+                        '(pt.z > .99 && pt.y < -.99) ||\n'+
+                        '(pt.z > .99 && pt.x > .99) ||\n'+
+                        '(pt.z > .99 && pt.x < -.99) ||\n'+
+
+                        '(pt.z < -.99 && pt.y > .99) ||\n'+
+                        '(pt.z < -.99 && pt.y < -.99) ||\n'+
+                        '(pt.z < -.99 && pt.x > .99) ||\n'+
+                        '(pt.z < -.99 && pt.x < -.99) ||\n'+
+
+                        '(pt.x < -.99 && pt.y > .99) ||\n'+
+                        '(pt.x < -.99 && pt.y < -.99) ||\n'+
+                        '(pt.x > .99 && pt.y > .99) ||\n'+
+                        '(pt.x > .99 && pt.y < -.99)\n'+
+                        ') { \n'+
+                    'gl_FragColor = vec4(0.,0.,0.,1.); return;\n'+
+                '}\n'+
                 'float curr = 0.;\n'+
-                'if (surface == 0.) { curr = func(pt); } else { curr = funcKiss(pt); }\n'+
+                'if (surface == 0.) { curr = fn(pt.x, pt.y, pt.z); } else { curr = funcKiss(pt); }\n'+
 
                 'if (last*curr < 0.) {\n'+
                     'vec3 grad = vec3(0.,0.,0.);\n'+
@@ -9772,17 +9789,19 @@ var world = new World('raytracer', {element: '#grapher'});
                         'norm = norm*-1.;\n'+
                     '}\n'+
                     
+                    /*
                     'if (opacity >= 1.) {\n'+
                         'gl_FragColor = vec4(vec3(1.,1.,1.)*abs(dot(norm, normalize(lightsource-pt))), 1.);\n'+
                         'return;\n'+
                     '}\n'+
-                    
-                    /* // Gradient-less coloring?
+                    */
+
+                     // Gradient-less coloring?
                     'if (opacity >= 1.) {\n'+
-                        'gl_FragColor = vec4(vec3(1.,1.,1.)*(pt.z/2.+.5), 1.);\n'+
+                        'gl_FragColor = vec4(vec3(1.,1.,1.)*(pt.xyz/2.+.5), 1.);\n'+
                         'return;\n'+
                     '}\n'+
-                    */
+                    
                     'else {\n'+
                         'I += abs(dot(norm, normalize(lightsource-pt)));\n'+
                         'intersects++;\n'+
@@ -9800,34 +9819,47 @@ var world = new World('raytracer', {element: '#grapher'});
             'gl_FragColor = vec4(1.,1.,1.,1.);\n'+
 
         '}';
+    return fShader;
+}
 
-    vShader = 
-        'varying vec4 vPosition;\n'+
-        'varying vec3 vNormal;\n'+
-        'void main() {\n' +
-            'vPosition = modelMatrix * vec4(position, 1.0);\n' +
-            'vNormal = normal;\n' +
-            'gl_Position = ' +
-                'projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n' +
-        '}';
-
-    var uniforms = {};
+var vShader = 
+    'varying vec4 vPosition;\n'+
+    'varying vec3 vNormal;\n'+
+    'void main() {\n' +
+        'vPosition = modelMatrix * vec4(position, 1.0);\n' +
+        'vNormal = normal;\n' +
+        'gl_Position = ' +
+            'projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n' +
+    '}';
 
 
-    uniforms['lightsource'] = {type: 'v3', value: new THREE.Vector3(10, 10, -30)};
-    // Stepsize for sampling... 1 seems a good compromise between real-time shading and quality
-    // on my MBP
-    uniforms['stepsize'] = {type: 'f', value: .01};
-    uniforms['opacity'] = {type: 'f', value: 1.};
-    uniforms['surface'] = {type: 'f', value: 0.};
+var fn = '' + 
+    'float fn(float x, float y, float z) {\n' +
+        'return 81.*(x*x*x + y*y*y + z*z*z) - '+ 
+            '189.*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + '+
+            '54.*(x*y*z) + 126.*(x*y+x*z+y*z) - 9.*(x*x+y*y+z*z) - 9.*(x+y+z) + 1.;\n' +
+    '}\n';
 
-    var material = new THREE.ShaderMaterial( { 
-        uniforms: uniforms, 
-        vertexShader: vShader, 
-        fragmentShader: fShader,
-        side: THREE.DoubleSide,
-        shading: THREE.SmoothShading,
-    });
+var fShader = makeFragmentShader(fn);
+
+
+var uniforms = {};
+
+
+uniforms['lightsource'] = {type: 'v3', value: new THREE.Vector3(10, 10, -30)};
+// Stepsize for sampling... 1 seems a good compromise between real-time shading and quality
+// on my MBP
+uniforms['stepsize'] = {type: 'f', value: .01};
+uniforms['opacity'] = {type: 'f', value: 1.};
+uniforms['surface'] = {type: 'f', value: 0.};
+
+var material = new THREE.ShaderMaterial( { 
+    uniforms: uniforms, 
+    vertexShader: vShader, 
+    fragmentShader: fShader,
+    side: THREE.DoubleSide,
+    shading: THREE.SmoothShading,
+});
 
 
 var box = new Box('plot', [2,2,2], {material: material});
@@ -9835,10 +9867,18 @@ var box = new Box('plot', [2,2,2], {material: material});
 
 world.addEntity(box);
 
+function updateShader(fn) {
+    var fragShader = makeFragmentShader(fn);
+    console.log(fragShader);
+    box.opts.material.fragmentShader = fragShader;
+    box.opts.material.needsUpdate = true;
+}
 
 world.go();
 
 window.functiongrapher = world.panel;
+window.updateShader = updateShader;
+
 
 $(window).resize(function() {
     world.setSize();
