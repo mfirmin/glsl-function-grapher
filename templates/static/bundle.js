@@ -292,9 +292,10 @@ var Sphere   = require('../entity/sphere');
 var Capsule  = require('../entity/capsule');
 var Plane    = require('../entity/plane');
 
-function World(name) {
+function World(name, opts) {
 
     this.name = name;
+    this.opts = (opts === undefined) ? {} : opts;
     this.initializeGL();
     this.initialize();
     this.initializeDiv();
@@ -341,39 +342,55 @@ World.prototype.initialize = function() {
     */
     this.camera.position.z = 5;
 
-    controls = new THREE.TrackballControls( this.camera );
-   // controls.target.set( 0, 0, 0 );
+    $(document).ready(function() {
+//        controls = new THREE.TrackballControls( this.camera, this.renderer.domElement);
+        controls = new THREE.TrackballControls( this.camera, (this.opts.element === undefined) ? $('body') : $(this.opts.element)[0]);
+       // controls.target.set( 0, 0, 0 );
 
-    controls.rotateSpeed = 20.0;
-    controls.zoomSpeed = 1.2;
- //   controls.panSpeed = 0.8;
+        controls.rotateSpeed = 20.0;
+        controls.zoomSpeed = 1.2;
+     //   controls.panSpeed = 0.8;
 
-    controls.noZoom = false;
-//    controls.noPan = false;
+        controls.noZoom = false;
+    //    controls.noPan = false;
 
-    controls.staticMoving = true;
-    controls.dynamicDampingFactor = 0.3;
+        controls.staticMoving = true;
+        controls.dynamicDampingFactor = 0.3;
 
-    this.controls = controls;
+        this.controls = controls;
+    }.bind(this));
 };
 
 World.prototype.initializeDiv = function() {
 
     this.panel = $('<div>')
         .addClass('ThreePanel')
-        .attr({tabindex:0})
-        .css({
-            position: 'absolute',
-            width: 400,
-            height: 400,
-        });
+        .attr({tabindex:0});
 
     this.renderer.setSize(400,400);
 
     this.canvas = $(this.renderer.domElement).width(400).height(400).addClass("threeCanvas");
     $(this.panel).append(this.canvas);
 
-}
+};
+
+World.prototype.setSize = function() {
+
+    var w = $(this.opts.element).width();
+    var h = $(this.opts.element).height();
+
+    console.log(w, h);
+
+    this.canvas.width(w);
+    this.canvas.height(h);
+
+    this.renderer.setSize(w, h);
+
+    this.camera.aspect = w/h;
+    this.camera.updateProjectionMatrix();
+
+//    this.panel.css({width: w, height: h});
+};
 
 World.prototype.addEntity = function(e) {
     
@@ -454,7 +471,9 @@ World.prototype.go = function() {
 
     var renderLoop = function() {
         this.renderer.render(this.scene, this.camera);
-        this.controls.update();
+        if (this.controls !== undefined) {
+            this.controls.update();
+        }
         if (!(this.paused)) { setTimeout(renderLoop, 1000/30); }
     }.bind(this)
 
@@ -9683,7 +9702,7 @@ var World = require('./world/world');
 var Box   = require('./entity/box');
 
 
-var world = new World('raytracer');
+var world = new World('raytracer', {element: '#grapher'});
 
 
     fShader = 
@@ -9820,6 +9839,10 @@ world.addEntity(box);
 world.go();
 
 window.functiongrapher = world.panel;
+
+$(window).resize(function() {
+    world.setSize();
+});
 
 
 

@@ -5,7 +5,7 @@ var World = require('./world/world');
 var Box   = require('./entity/box');
 
 
-var world = new World('raytracer');
+var world = new World('raytracer', {element: '#grapher'});
 
 
     fShader = 
@@ -142,5 +142,9 @@ world.addEntity(box);
 world.go();
 
 window.functiongrapher = world.panel;
+
+$(window).resize(function() {
+    world.setSize();
+});
 
 
