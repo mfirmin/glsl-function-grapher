@@ -9838,7 +9838,8 @@ function updateShader(fn) {
 
 world.go();
 
-window.functiongrapher = world.panel;
+//window.functiongrapher = world.panel;
+window.world = world;
 window.updateShader = updateShader;
 
 
