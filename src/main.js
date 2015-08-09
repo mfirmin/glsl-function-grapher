@@ -141,3 +141,6 @@ world.addEntity(box);
 
 world.go();
 
+window.functiongrapher = world.panel;
+
+

@@ -85,9 +85,6 @@ World.prototype.initializeDiv = function() {
     this.canvas = $(this.renderer.domElement).width(400).height(400).addClass("threeCanvas");
     $(this.panel).append(this.canvas);
 
-    $(document).ready(function() {
-        $('body').append(this.panel);
-    }.bind(this));
 }
 
 World.prototype.addEntity = function(e) {
