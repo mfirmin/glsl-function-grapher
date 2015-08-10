@@ -113,6 +113,7 @@ World.prototype.addEntity = function(e) {
     this.entities[name] = e;
 
     this.scene.add(e.mesh);
+
 }
 
 World.prototype.removeEntity = function(e) {

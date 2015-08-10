@@ -401,6 +401,7 @@ World.prototype.addEntity = function(e) {
     this.entities[name] = e;
 
     this.scene.add(e.mesh);
+
 }
 
 World.prototype.removeEntity = function(e) {
@@ -9744,25 +9745,25 @@ function makeFragmentShader(fn) {
             'int intersects = 0;\n'+
 
             'float last = 0.0;'+
-            'vec3 tols = vec3((xBounds.y - xBounds.x)*.001, (yBounds.y - yBounds.x)*.001, (zBounds.y - zBounds.x)*.001);\n'+ 
+            'vec3 tols = vec3((xBounds.y - xBounds.x)*.01, (yBounds.y - yBounds.x)*.01, (zBounds.y - zBounds.x)*.01);\n'+ 
             'for (int i = 0; i < 1000; i++) {\n'+
                 // outside roi case.
                 'if (pt.z < zBounds.x-tols.z || pt.z > zBounds.y+tols.z || pt.x < xBounds.x-tols.x || pt.x > xBounds.y+tols.x || pt.y > yBounds.y+tols.y || pt.y < yBounds.x-tols.y) { break; }\n'+
                 // plot outline
-                'if (    (pt.z > zBounds.y-10.*tols.z && pt.y > yBounds.y-10.*tols.y) ||\n'+
-                        '(pt.z > zBounds.y-10.*tols.z && pt.y < yBounds.x+10.*tols.y) ||\n'+
-                        '(pt.z > zBounds.y-10.*tols.z && pt.x > xBounds.y-10.*tols.x) ||\n'+
-                        '(pt.z > zBounds.y-10.*tols.z && pt.x < xBounds.x+10.*tols.x) ||\n'+
+                'if (    (pt.z > zBounds.y-1.*tols.z && pt.y > yBounds.y-1.*tols.y) ||\n'+
+                        '(pt.z > zBounds.y-1.*tols.z && pt.y < yBounds.x+1.*tols.y) ||\n'+
+                        '(pt.z > zBounds.y-1.*tols.z && pt.x > xBounds.y-1.*tols.x) ||\n'+
+                        '(pt.z > zBounds.y-1.*tols.z && pt.x < xBounds.x+1.*tols.x) ||\n'+
 
-                        '(pt.z < zBounds.x+10.*tols.z && pt.y > yBounds.y-10.*tols.y) ||\n'+
-                        '(pt.z < zBounds.x+10.*tols.z && pt.y < yBounds.x+10.*tols.y) ||\n'+
-                        '(pt.z < zBounds.x+10.*tols.z && pt.x > xBounds.y-10.*tols.x) ||\n'+
-                        '(pt.z < zBounds.x+10.*tols.z && pt.x < xBounds.x+10.*tols.x) ||\n'+
+                        '(pt.z < zBounds.x+1.*tols.z && pt.y > yBounds.y-1.*tols.y) ||\n'+
+                        '(pt.z < zBounds.x+1.*tols.z && pt.y < yBounds.x+1.*tols.y) ||\n'+
+                        '(pt.z < zBounds.x+1.*tols.z && pt.x > xBounds.y-1.*tols.x) ||\n'+
+                        '(pt.z < zBounds.x+1.*tols.z && pt.x < xBounds.x+1.*tols.x) ||\n'+
 
-                        '(pt.x < xBounds.x+10.*tols.x && pt.y > yBounds.y-10.*tols.y) ||\n'+
-                        '(pt.x < xBounds.x+10.*tols.x && pt.y < yBounds.x+10.*tols.y) ||\n'+
-                        '(pt.x > xBounds.y-10.*tols.x && pt.y > yBounds.y-10.*tols.y) ||\n'+
-                        '(pt.x > xBounds.y-10.*tols.x && pt.y < yBounds.x+10.*tols.y)\n'+
+                        '(pt.x < xBounds.x+1.*tols.x && pt.y > yBounds.y-1.*tols.y) ||\n'+
+                        '(pt.x < xBounds.x+1.*tols.x && pt.y < yBounds.x+1.*tols.y) ||\n'+
+                        '(pt.x > xBounds.y-1.*tols.x && pt.y > yBounds.y-1.*tols.y) ||\n'+
+                        '(pt.x > xBounds.y-1.*tols.x && pt.y < yBounds.x+1.*tols.y)\n'+
                         ') { \n'+
                     'gl_FragColor = vec4(0.,0.,0.,1.); return;\n'+
                 '}\n'+
@@ -9842,6 +9843,8 @@ var material = new THREE.ShaderMaterial( {
 var box = new Box('plot', [2,2,2], {material: material});
 //var box = new Box('plot', [2,2,2] );
 
+window.box = box;
+
 world.addEntity(box);
 
 function updateShader(fn) {
@@ -9855,17 +9858,32 @@ function setOpacity(val) {
 }
 
 function updateBounds(val) {
-    world.removeEntity(box);
+
+    world.removeEntity(window.box);
+
     for (var entry in val) {
         for (var coord in val[entry]) {
-            uniforms[entry].value[coord] = val[entry][coord];
+            uniforms[entry].value[coord] = Number(val[entry][coord]);
         }
     }
-    var x = uniforms['xBounds'].value;
+    var x = uniforms['xBounds'].value; 
     var y = uniforms['yBounds'].value;
     var z = uniforms['zBounds'].value;
     var boxnew = new Box('plot', [x.y - x.x, y.y - y.x, z.y - z.x], {material: material});
+
+    console.log(x, y, z);
+
+    boxnew.mesh.position.x = (x.x + x.y)/2.
+    boxnew.mesh.position.y = (y.x + y.y)/2.
+    boxnew.mesh.position.z = (z.x + z.y)/2.
+
+    console.log(boxnew.mesh.position);
+
+    boxnew.mesh.updateMatrix();
+    
     world.addEntity(boxnew);
+
+    window.box = boxnew;
 }
 
 world.go();
