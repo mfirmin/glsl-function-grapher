@@ -167,6 +167,9 @@ function updateBounds(val) {
     var z = uniforms['zBounds'].value;
     var boxnew = new Box('plot', [x.y - x.x, y.y - y.x, z.y - z.x], {material: material});
 
+    var step = (Math.max(Math.max(x.y - x.x, y.y - y.x), z.y - z.x))/100;
+    uniforms['stepsize'].value = step;
+
     console.log(x, y, z);
 
     boxnew.mesh.position.x = (x.x + x.y)/2.
