@@ -9729,6 +9729,10 @@ function makeFragmentShader(fn) {
             fn + ';\n' +
         '}\n'+
 
+        'vec3 ptToColor(vec3 pt) {\n'+
+            'return vec3(1.,1.,1.)*(pt.xyz/vec3( xBounds.y - xBounds.x, yBounds.y - yBounds.x, zBounds.y - zBounds.x) + .5);\n'+
+        '}\n' +
+
         'void main() {' + 
             'vec3 ro = cameraPosition;\n'+
             'vec3 dir = vPosition.xyz - ro;\n'+
@@ -9775,7 +9779,7 @@ function makeFragmentShader(fn) {
 
                      // Gradient-less coloring?
                     'if (opacity >= 1.) {\n'+
-                        'gl_FragColor = vec4(vec3(1.,1.,1.)*(pt.xyz/2.+.5), 1.);\n'+
+                        'gl_FragColor = vec4(ptToColor(pt.xyz), 1.);\n'+
                         'return;\n'+
                     '} else {\n'+
                         'I += vec3(1.,1.,1.)*(pt.xyz/2.+.5);\n'+
