@@ -403,6 +403,14 @@ World.prototype.addEntity = function(e) {
     this.scene.add(e.mesh);
 }
 
+World.prototype.removeEntity = function(e) {
+    if (this.entities[e.name] === undefined) {
+        return;
+    }
+    this.scene.remove(e.mesh);
+    delete this.entities[e.name];
+}
+
 World.prototype.setFromJSON = function(data) {
     var entities = data.entities;
     for (var e in entities) {
@@ -9710,9 +9718,15 @@ function makeFragmentShader(fn) {
         'uniform float stepsize;\n'+
         'uniform float opacity;\n'+
         'uniform float surface;\n'+
+        'uniform vec2 xBounds;\n'+
+        'uniform vec2 yBounds;\n'+
+        'uniform vec2 zBounds;\n'+
         // Describe ROI as a sphere later?
 
-        fn +
+        'float fn(float x, float y, float z) {\n' +
+            'return ' + 
+            fn + ';\n' +
+        '}\n'+
 
         'void main() {' + 
             'vec3 ro = cameraPosition;\n'+
@@ -9730,24 +9744,25 @@ function makeFragmentShader(fn) {
             'int intersects = 0;\n'+
 
             'float last = 0.0;'+
+            'vec3 tols = vec3((xBounds.y - xBounds.x)*.001, (yBounds.y - yBounds.x)*.001, (zBounds.y - zBounds.x)*.001);\n'+ 
             'for (int i = 0; i < 1000; i++) {\n'+
                 // outside roi case.
-                'if (pt.z < -1.001 || pt.z > 1.001 || pt.x < -1.001 || pt.x > 1.001 || pt.y > 1.001 || pt.y < -1.001) { break; }\n'+
+                'if (pt.z < zBounds.x-tols.z || pt.z > zBounds.y+tols.z || pt.x < xBounds.x-tols.x || pt.x > xBounds.y+tols.x || pt.y > yBounds.y+tols.y || pt.y < yBounds.x-tols.y) { break; }\n'+
                 // plot outline
-                'if (    (pt.z > .99 && pt.y > .99) ||\n'+
-                        '(pt.z > .99 && pt.y < -.99) ||\n'+
-                        '(pt.z > .99 && pt.x > .99) ||\n'+
-                        '(pt.z > .99 && pt.x < -.99) ||\n'+
+                'if (    (pt.z > zBounds.y-10.*tols.z && pt.y > yBounds.y-10.*tols.y) ||\n'+
+                        '(pt.z > zBounds.y-10.*tols.z && pt.y < yBounds.x+10.*tols.y) ||\n'+
+                        '(pt.z > zBounds.y-10.*tols.z && pt.x > xBounds.y-10.*tols.x) ||\n'+
+                        '(pt.z > zBounds.y-10.*tols.z && pt.x < xBounds.x+10.*tols.x) ||\n'+
 
-                        '(pt.z < -.99 && pt.y > .99) ||\n'+
-                        '(pt.z < -.99 && pt.y < -.99) ||\n'+
-                        '(pt.z < -.99 && pt.x > .99) ||\n'+
-                        '(pt.z < -.99 && pt.x < -.99) ||\n'+
+                        '(pt.z < zBounds.x+10.*tols.z && pt.y > yBounds.y-10.*tols.y) ||\n'+
+                        '(pt.z < zBounds.x+10.*tols.z && pt.y < yBounds.x+10.*tols.y) ||\n'+
+                        '(pt.z < zBounds.x+10.*tols.z && pt.x > xBounds.y-10.*tols.x) ||\n'+
+                        '(pt.z < zBounds.x+10.*tols.z && pt.x < xBounds.x+10.*tols.x) ||\n'+
 
-                        '(pt.x < -.99 && pt.y > .99) ||\n'+
-                        '(pt.x < -.99 && pt.y < -.99) ||\n'+
-                        '(pt.x > .99 && pt.y > .99) ||\n'+
-                        '(pt.x > .99 && pt.y < -.99)\n'+
+                        '(pt.x < xBounds.x+10.*tols.x && pt.y > yBounds.y-10.*tols.y) ||\n'+
+                        '(pt.x < xBounds.x+10.*tols.x && pt.y < yBounds.x+10.*tols.y) ||\n'+
+                        '(pt.x > xBounds.y-10.*tols.x && pt.y > yBounds.y-10.*tols.y) ||\n'+
+                        '(pt.x > xBounds.y-10.*tols.x && pt.y < yBounds.x+10.*tols.y)\n'+
                         ') { \n'+
                     'gl_FragColor = vec4(0.,0.,0.,1.); return;\n'+
                 '}\n'+
@@ -9794,11 +9809,9 @@ var vShader =
 
 
 var fn = '' + 
-    'float fn(float x, float y, float z) {\n' +
-        'return 81.*(x*x*x + y*y*y + z*z*z) - '+ 
+        '81.*(x*x*x + y*y*y + z*z*z) - '+ 
             '189.*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + '+
-            '54.*(x*y*z) + 126.*(x*y+x*z+y*z) - 9.*(x*x+y*y+z*z) - 9.*(x+y+z) + 1.;\n' +
-    '}\n';
+            '54.*(x*y*z) + 126.*(x*y+x*z+y*z) - 9.*(x*x+y*y+z*z) - 9.*(x+y+z) + 1.';
 
 var fShader = makeFragmentShader(fn);
 
@@ -9812,6 +9825,10 @@ uniforms['lightsource'] = {type: 'v3', value: new THREE.Vector3(10, 10, -30)};
 uniforms['stepsize'] = {type: 'f', value: .01};
 uniforms['opacity'] = {type: 'f', value: 0.5};
 uniforms['surface'] = {type: 'f', value: 0.};
+
+uniforms['xBounds'] = {type: 'v2', value: new THREE.Vector2(-1, 1)};
+uniforms['yBounds'] = {type: 'v2', value: new THREE.Vector2(-1, 1)};
+uniforms['zBounds'] = {type: 'v2', value: new THREE.Vector2(-1, 1)};
 
 var material = new THREE.ShaderMaterial( { 
     uniforms: uniforms, 
@@ -9837,12 +9854,27 @@ function setOpacity(val) {
     uniforms['opacity'].value = val;
 }
 
+function updateBounds(val) {
+    world.removeEntity(box);
+    for (var entry in val) {
+        for (var coord in val[entry]) {
+            uniforms[entry].value[coord] = val[entry][coord];
+        }
+    }
+    var x = uniforms['xBounds'].value;
+    var y = uniforms['yBounds'].value;
+    var z = uniforms['zBounds'].value;
+    var boxnew = new Box('plot', [x.y - x.x, y.y - y.x, z.y - z.x], {material: material});
+    world.addEntity(boxnew);
+}
+
 world.go();
 
 //window.functiongrapher = world.panel;
 window.world = world;
 window.updateShader = updateShader;
 window.setOpacity = setOpacity;
+window.updateBounds = updateBounds;
 
 
 $(window).resize(function() {

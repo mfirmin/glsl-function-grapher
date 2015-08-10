@@ -115,6 +115,14 @@ World.prototype.addEntity = function(e) {
     this.scene.add(e.mesh);
 }
 
+World.prototype.removeEntity = function(e) {
+    if (this.entities[e.name] === undefined) {
+        return;
+    }
+    this.scene.remove(e.mesh);
+    delete this.entities[e.name];
+}
+
 World.prototype.setFromJSON = function(data) {
     var entities = data.entities;
     for (var e in entities) {
