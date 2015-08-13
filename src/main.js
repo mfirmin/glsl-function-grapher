@@ -7,7 +7,9 @@ var Box   = require('./entity/box');
 
 var world = new World('raytracer', {element: '#grapher'});
 
-function makeFragmentShader(fn) {
+function makeFragmentShader(fn, extraUniforms) {
+
+    extraUniforms = (extraUniforms === undefined) ? '' : extraUniforms;
 
     var fShader = '' +
         'varying vec4 vPosition;\n'+
@@ -18,6 +20,7 @@ function makeFragmentShader(fn) {
         'uniform vec2 xBounds;\n'+
         'uniform vec2 yBounds;\n'+
         'uniform vec2 zBounds;\n'+
+        extraUniforms +
         // Describe ROI as a sphere later?
 
         'float fn(float x, float y, float z) {\n' +
@@ -147,8 +150,31 @@ window.box = box;
 
 world.addEntity(box);
 
+function findVariables(fn) {
+
+    var retFn = fn; // copy str.
+
+    var reg = /\{\{(\w+):(\d+):(\d+):(\d+)\}\}/g;
+    var varPart = reg.exec(fn);
+    var extraUniforms = '';
+
+    while (varPart !== null) {
+
+        retFn = retFn.replace(varPart[0], varPart[1]);
+
+        uniforms[varPart[1]] = {type: 'f', value: varPart[4]};
+        extraUniforms += 'uniform float ' + varPart[1] + ';\n';
+
+        var varPart = reg.exec(fn);
+    }
+
+    return {retFn: retFn, extraUniforms: extraUniforms};
+
+}
+
 function updateShader(fn) {
-    var fragShader = makeFragmentShader(fn);
+    var ret = findVariables(fn);
+    var fragShader = makeFragmentShader(ret.retFn, ret.extraUniforms);
     box.opts.material.fragmentShader = fragShader;
     box.opts.material.needsUpdate = true;
 }
@@ -174,13 +200,11 @@ function updateBounds(val) {
     var step = (Math.max(Math.max(x.y - x.x, y.y - y.x), z.y - z.x))/100;
     uniforms['stepsize'].value = step;
 
-    console.log(x, y, z);
 
     boxnew.mesh.position.x = (x.x + x.y)/2.
     boxnew.mesh.position.y = (y.x + y.y)/2.
     boxnew.mesh.position.z = (z.x + z.y)/2.
 
-    console.log(boxnew.mesh.position);
 
     boxnew.mesh.updateMatrix();
     
