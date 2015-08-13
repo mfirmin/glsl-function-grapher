@@ -9862,6 +9862,8 @@ function findVariables(fn) {
     var varPart = reg.exec(fn);
     var extraUniforms = '';
 
+    var variables = {};
+
     while (varPart !== null) {
 
         retFn = retFn.replace(varPart[0], varPart[1]);
@@ -9869,10 +9871,12 @@ function findVariables(fn) {
         uniforms[varPart[1]] = {type: 'f', value: varPart[4]};
         extraUniforms += 'uniform float ' + varPart[1] + ';\n';
 
+        variables[varPart[1]] = {min: varPart[2], max: varPart[3], def: varPart[4], hook: (function(uni) { return function(val) { uni.value = val; }; })(uniforms[varPart[1]]) };
+
         var varPart = reg.exec(fn);
     }
 
-    return {retFn: retFn, extraUniforms: extraUniforms};
+    return {retFn: retFn, extraUniforms: extraUniforms, variables: variables};
 
 }
 
@@ -9881,6 +9885,8 @@ function updateShader(fn) {
     var fragShader = makeFragmentShader(ret.retFn, ret.extraUniforms);
     box.opts.material.fragmentShader = fragShader;
     box.opts.material.needsUpdate = true;
+
+    return ret.variables;
 }
 
 function setOpacity(val) {
