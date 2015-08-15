@@ -1,0 +1,129 @@
+---
+layout: post
+title: Michael Firmin
+---
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>GLSL 3D Function Grapher</title>
+
+    <link rel="stylesheet" type="text/css" href="css/functiongrapher.css">
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript" src="static/lib/three.min.js"></script>
+    <script type="text/javascript" src="static/lib/TrackballControls.js"></script>
+    <script src="static/functiongrapher.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#grapher').append(world.panel);
+            world.setSize();
+
+            var customVars = [];
+            function update(text) { 
+                for (var i = 0; i < customVars.length; i++) {
+                    $(customVars[i]).remove();
+                }
+                customVars.length = 0;
+                var variables = updateShader(text);
+                for (var entry in variables) {
+                    var input = '<input type="number" id="'+entry+'" value="'+variables[entry].def+'">';
+                    $('#controls').append(entry+': '+input+'<br>');
+                    customVars.push('#'+entry);
+                    $('#'+entry).change((function(hook) {
+                        return function() {
+                            hook(this.value);
+                        }
+                    })(variables[entry].hook));
+                }
+            }
+
+            $('#getFunction').click(function() {
+                var text = $('textarea#function').val();
+                update(text);
+            });
+            $('#clebsch').click(function() {
+                var text = '81.0*(x*x*x + y*y*y + z*z*z) - 189.0*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + 54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0';
+                $('textarea#function').val(text);
+                update(text);
+            });
+            $('#kiss').click(function() {
+                var text = 'z*z*z*z - z*z*z*z*z - x*x - y*y';
+                $('textarea#function').val(text);
+                update(text);
+            });
+            $('#sin').click(function() {
+                var text = 'sin(x*y) - z';
+                $('textarea#function').val(text);
+                update(text);
+            });
+            $('#variables').click(function() {
+                var text = "\{\{slope:0:1:0\}\}*x + \{\{intercept:0:1:0\}\} - z";
+                $('textarea#function').val(text);
+                update(text);
+            });
+
+            // controls
+            $('#opacity').change(function() {
+                setOpacity((this.checked) ? 1 : 0);
+            });
+            
+            $('#xmax').change(function() {
+                updateBounds({'xBounds': {'y': this.value}});
+            });
+            $('#ymax').change(function() {
+                updateBounds({'yBounds': {'y': this.value}});
+            });
+            $('#zmax').change(function() {
+                updateBounds({'zBounds': {'y': this.value}});
+            });
+            $('#xmin').change(function() {
+                updateBounds({'xBounds': {'x': this.value}});
+            });
+            $('#ymin').change(function() {
+                updateBounds({'yBounds': {'x': this.value}});
+            });
+            $('#zmin').change(function() {
+                updateBounds({'zBounds': {'x': this.value}});
+            });
+            
+        });
+    </script>
+    </head>
+<body>
+    <div id='info'>
+        <h4>Raycasting based 3D Function Grapher using GLSL Shaders</h4>
+        This example uses GLSL shaders with Three.js to graph a 3D function using a real time raycasting approach. You can rotate the plot with the mouse, and zoom with the scroll wheel. <br>
+    See this project on <a href="https://github.com/mfirmin/glsl-function-grapher">github</a>.  <br>
+    Blog post coming soon!
+    </div>
+    <div id='main'>
+        <div id='controls'>
+            <input type="checkbox" id="opacity" value="Opaque">Opaque<br>
+            x limits: [<input type="number" id="xmin" value="-1">, <input type="number" id="xmax", value="1">] <br>
+            y limits: [<input type="number" id="ymin" value="-1">, <input type="number" id="ymax", value="1">] <br>
+            z limits: [<input type="number" id="zmin" value="-1">, <input type="number" id="zmax", value="1">] <br>
+        </div>
+        <div id='grapher'></div>
+        <div id='fninput'>
+            Function Input:  <br>
+            0 =
+            <textarea rows="5" cols="80" id="function">81.0*(x*x*x + y*y*y + z*z*z) - &#13;&#10;            189.0*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + &#13;&#10;            54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0&#13;&#10;</textarea> <br>
+            <button id='getFunction'>Graph!</button> <br>
+            Having Trouble? The function must be written using <a href="https://en.wikipedia.org/wiki/OpenGL_Shading_Language">glsl</a> notation. A common error is that glsl is picky about floating point numbers vs integers, so make sure you write "1.0" instead of "1". Input should be in the form "0 = f(x,y,z)", without the "0 ="
+
+            <p>
+            Try these out: <br>
+            <a href="http://mathworld.wolfram.com/ClebschDiagonalCubic.html">Clebsch Diagonal Cubic</a>: 
+            <button id='clebsch'>Graph!</button> <br>
+            <a href="http://mathworld.wolfram.com/KissSurface.html">Kiss Surface</a>
+            <button id='kiss'>Graph!</button> <br>
+            z=sin(xy)<button id='sin'>Graph!</button> <br>
+            Variables<button id='variables'>Graph!</button> <br>
+            </p>
+
+            Advanced Tips: <br>
+            Create variables in your equation by using the syntax: {{name:min:max:default}} where name is the name of the variable, and min, max, and default are all numbers. This will populate a variable control in the left panel. See the Variables example above!
+        </div>
+    </div>
+</body>
+</html>
+&#13;&#10;

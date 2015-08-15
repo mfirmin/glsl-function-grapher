@@ -1,0 +1,51 @@
+
+#info {
+    position: absolute;
+    width: 100%;
+    height: 20%;
+    top: 0;
+}
+
+#main {
+    position: absolute;
+    width: 100%;
+    height: 80%;
+    bottom: 0;
+}
+
+#controls {
+    position: absolute;
+    width: 19vw;
+    height: 100%;
+    left: .5vw;
+    border: 2px solid gray;
+
+}
+
+#grapher {
+
+    position: absolute;
+    width: 30vw;
+    height: 30vw;
+    left: 20vw;
+    border: 2px solid gray;
+
+}
+
+.ThreePanel {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+#fninput {
+
+    position: absolute;
+    width: 30vw;
+    height: 100%;
+    right: 15vw;
+}
+
+input[type=number] {
+    width: 40px;
+} 
