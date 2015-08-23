@@ -14,26 +14,20 @@ title: Michael Firmin
     <script src="static/functiongrapher.js"></script>
     <script>
         $(document).ready(function() {
-            $('#grapher').append(world.panel);
-            world.setSize();
+            var fg = new FunctionGrapher();
 
             var customVars = [];
             function update(text) { 
+                fg.updateShader(text);
+                /*
                 for (var i = 0; i < customVars.length; i++) {
                     $(customVars[i]).remove();
                 }
                 customVars.length = 0;
                 var variables = updateShader(text);
                 for (var entry in variables) {
-                    var input = '<input type="number" id="'+entry+'" value="'+variables[entry].def+'">';
-                    $('#controls').append(entry+': '+input+'<br>');
-                    customVars.push('#'+entry);
-                    $('#'+entry).change((function(hook) {
-                        return function() {
-                            hook(this.value);
-                        }
-                    })(variables[entry].hook));
                 }
+                */
             }
 
             $('#getFunction').click(function() {

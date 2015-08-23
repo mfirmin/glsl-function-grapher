@@ -4,10 +4,158 @@ var $     = require('jquery');
 var World = require('./world/world');
 var Box   = require('./entity/box');
 
+var FunctionGrapher = function() {
 
-var world = new World('raytracer', {element: '#grapher'});
+    this.init();
 
-function makeFragmentShader(fn, extraUniforms) {
+    $('#grapher').append(this.world.panel);
+    this.world.setSize();
+
+};
+
+FunctionGrapher.prototype.constructor = FunctionGrapher;
+
+FunctionGrapher.prototype.init = function() {
+
+    this.world = new World('raytracer', {element: '#grapher'});
+
+    var vShader = 
+        'varying vec4 vPosition;\n'+
+        'varying vec3 vNormal;\n'+
+        'void main() {\n' +
+            'vPosition = modelMatrix * vec4(position, 1.0);\n' +
+            'vNormal = normal;\n' +
+            'gl_Position = ' +
+                'projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n' +
+        '}';
+
+
+    var fn = '' + 
+            '81.*(x*x*x + y*y*y + z*z*z) - '+ 
+                '189.*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + '+
+                '54.*(x*y*z) + 126.*(x*y+x*z+y*z) - 9.*(x*x+y*y+z*z) - 9.*(x+y+z) + 1.';
+
+    var fShader = this.makeFragmentShader(fn);
+
+    this.uniforms = {};
+
+    this.uniforms['lightsource'] = {type: 'v3', value: new THREE.Vector3(10, 10, -30)};
+    // Stepsize for sampling... 1 seems a good compromise between real-time shading and quality
+    // on my MBP
+    this.uniforms['stepsize'] = {type: 'f', value: .01};
+    this.uniforms['opacity'] = {type: 'f', value: 0.5};
+    this.uniforms['surface'] = {type: 'f', value: 0.};
+
+    this.uniforms['xBounds'] = {type: 'v2', value: new THREE.Vector2(-1, 1)};
+    this.uniforms['yBounds'] = {type: 'v2', value: new THREE.Vector2(-1, 1)};
+    this.uniforms['zBounds'] = {type: 'v2', value: new THREE.Vector2(-1, 1)};
+
+    var material = new THREE.ShaderMaterial( { 
+        uniforms: this.uniforms, 
+        vertexShader: vShader, 
+        fragmentShader: fShader,
+        side: THREE.DoubleSide,
+        shading: THREE.SmoothShading,
+    });
+
+
+    this.box = new Box('plot', [2,2,2], {material: material});
+    //var box = new Box('plot', [2,2,2] );
+
+    this.world.addEntity(this.box);
+
+
+    this.world.go();
+
+    $(window).resize(function() {
+        this.world.setSize();
+    }.bind(this));
+};
+
+FunctionGrapher.prototype.makeVariable = function(variable) {
+
+    var vardiv = $('<div id="'+variable[1]+'">').append('<label>').text(variable[1]).append('<input id="'+variable[1]+'_input" type="number" value="'+variable[4]+'">');
+
+    $('#controls').append(vardiv);
+
+    $('#'+variable[1]+'_input').change((function(uni) { return function() { uni.value = this.value; }; })(this.uniforms[variable[1]]));
+
+};
+
+FunctionGrapher.prototype.findVariables = function(fn) {
+
+    var retFn = fn; // copy str.
+
+    var reg = /\{\{(\w+):(\d+):(\d+):(\d+)\}\}/g;
+    var varPart = reg.exec(fn);
+    var extraUniforms = '';
+
+    for (var id in this.customVarIDs) {
+        $(id).remove();
+    }
+
+    this.customVarIDs = [];
+
+    while (varPart !== null) {
+
+        retFn = retFn.replace(varPart[0], varPart[1]);
+
+        this.uniforms[varPart[1]] = {type: 'f', value: varPart[4]};
+        extraUniforms += 'uniform float ' + varPart[1] + ';\n';
+
+        this.makeVariable(varPart);
+
+        this.customVarIDs.push('#'+varPart[1]);
+
+        var varPart = reg.exec(fn);
+    }
+
+    return {retFn: retFn, extraUniforms: extraUniforms};
+
+}
+
+FunctionGrapher.prototype.updateShader = function(fn) {
+    var ret = this.findVariables(fn);
+    var fragShader = this.makeFragmentShader(ret.retFn, ret.extraUniforms);
+    this.box.opts.material.fragmentShader = fragShader;
+    this.box.opts.material.needsUpdate = true;
+}
+
+FunctionGrapher.prototype.setOpacity = function(val) {
+    this.uniforms['opacity'].value = val;
+}
+
+FunctionGrapher.prototype.updateBounds = function(val) {
+
+    this.world.removeEntity(this.box);
+
+    for (var entry in val) {
+        for (var coord in val[entry]) {
+            this.uniforms[entry].value[coord] = Number(val[entry][coord]);
+        }
+    }
+    var x = this.uniforms['xBounds'].value; 
+    var y = this.uniforms['yBounds'].value;
+    var z = this.uniforms['zBounds'].value;
+    var boxnew = new Box('plot', [x.y - x.x, y.y - y.x, z.y - z.x], {material: material});
+
+    var step = (Math.max(Math.max(x.y - x.x, y.y - y.x), z.y - z.x))/100;
+    this.uniforms['stepsize'].value = step;
+
+
+    boxnew.mesh.position.x = (x.x + x.y)/2.
+    boxnew.mesh.position.y = (y.x + y.y)/2.
+    boxnew.mesh.position.z = (z.x + z.y)/2.
+
+
+    boxnew.mesh.updateMatrix();
+    
+    this.world.addEntity(boxnew);
+
+    this.box = boxnew;
+};
+
+FunctionGrapher.prototype.makeFragmentShader = function(fn, extraUniforms) {
 
     extraUniforms = (extraUniforms === undefined) ? '' : extraUniforms;
 
@@ -99,137 +247,8 @@ function makeFragmentShader(fn, extraUniforms) {
 
         '}';
     return fShader;
-}
-
-var vShader = 
-    'varying vec4 vPosition;\n'+
-    'varying vec3 vNormal;\n'+
-    'void main() {\n' +
-        'vPosition = modelMatrix * vec4(position, 1.0);\n' +
-        'vNormal = normal;\n' +
-        'gl_Position = ' +
-            'projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n' +
-    '}';
-
-
-var fn = '' + 
-        '81.*(x*x*x + y*y*y + z*z*z) - '+ 
-            '189.*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + '+
-            '54.*(x*y*z) + 126.*(x*y+x*z+y*z) - 9.*(x*x+y*y+z*z) - 9.*(x+y+z) + 1.';
-
-var fShader = makeFragmentShader(fn);
-
-
-var uniforms = {};
-
-
-uniforms['lightsource'] = {type: 'v3', value: new THREE.Vector3(10, 10, -30)};
-// Stepsize for sampling... 1 seems a good compromise between real-time shading and quality
-// on my MBP
-uniforms['stepsize'] = {type: 'f', value: .01};
-uniforms['opacity'] = {type: 'f', value: 0.5};
-uniforms['surface'] = {type: 'f', value: 0.};
-
-uniforms['xBounds'] = {type: 'v2', value: new THREE.Vector2(-1, 1)};
-uniforms['yBounds'] = {type: 'v2', value: new THREE.Vector2(-1, 1)};
-uniforms['zBounds'] = {type: 'v2', value: new THREE.Vector2(-1, 1)};
-
-var material = new THREE.ShaderMaterial( { 
-    uniforms: uniforms, 
-    vertexShader: vShader, 
-    fragmentShader: fShader,
-    side: THREE.DoubleSide,
-    shading: THREE.SmoothShading,
-});
-
-
-var box = new Box('plot', [2,2,2], {material: material});
-//var box = new Box('plot', [2,2,2] );
-
-window.box = box;
-
-world.addEntity(box);
-
-function findVariables(fn) {
-
-    var retFn = fn; // copy str.
-
-    var reg = /\{\{(\w+):(\d+):(\d+):(\d+)\}\}/g;
-    var varPart = reg.exec(fn);
-    var extraUniforms = '';
-
-    var variables = {};
-
-    while (varPart !== null) {
-
-        retFn = retFn.replace(varPart[0], varPart[1]);
-
-        uniforms[varPart[1]] = {type: 'f', value: varPart[4]};
-        extraUniforms += 'uniform float ' + varPart[1] + ';\n';
-
-        variables[varPart[1]] = {min: varPart[2], max: varPart[3], def: varPart[4], hook: (function(uni) { return function(val) { uni.value = val; }; })(uniforms[varPart[1]]) };
-
-        var varPart = reg.exec(fn);
-    }
-
-    return {retFn: retFn, extraUniforms: extraUniforms, variables: variables};
 
 }
 
-function updateShader(fn) {
-    var ret = findVariables(fn);
-    var fragShader = makeFragmentShader(ret.retFn, ret.extraUniforms);
-    box.opts.material.fragmentShader = fragShader;
-    box.opts.material.needsUpdate = true;
-
-    return ret.variables;
-}
-
-function setOpacity(val) {
-    uniforms['opacity'].value = val;
-}
-
-function updateBounds(val) {
-
-    world.removeEntity(window.box);
-
-    for (var entry in val) {
-        for (var coord in val[entry]) {
-            uniforms[entry].value[coord] = Number(val[entry][coord]);
-        }
-    }
-    var x = uniforms['xBounds'].value; 
-    var y = uniforms['yBounds'].value;
-    var z = uniforms['zBounds'].value;
-    var boxnew = new Box('plot', [x.y - x.x, y.y - y.x, z.y - z.x], {material: material});
-
-    var step = (Math.max(Math.max(x.y - x.x, y.y - y.x), z.y - z.x))/100;
-    uniforms['stepsize'].value = step;
-
-
-    boxnew.mesh.position.x = (x.x + x.y)/2.
-    boxnew.mesh.position.y = (y.x + y.y)/2.
-    boxnew.mesh.position.z = (z.x + z.y)/2.
-
-
-    boxnew.mesh.updateMatrix();
-    
-    world.addEntity(boxnew);
-
-    window.box = boxnew;
-}
-
-world.go();
-
-//window.functiongrapher = world.panel;
-window.world = world;
-window.updateShader = updateShader;
-window.setOpacity = setOpacity;
-window.updateBounds = updateBounds;
-
-
-$(window).resize(function() {
-    world.setSize();
-});
-
+window.FunctionGrapher = FunctionGrapher;
 
