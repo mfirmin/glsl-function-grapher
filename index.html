@@ -1,5 +1,4 @@
 ---
-layout: post
 title: Michael Firmin
 ---
 <!DOCTYPE html>
@@ -19,15 +18,6 @@ title: Michael Firmin
             var customVars = [];
             function update(text) { 
                 fg.updateShader(text);
-                /*
-                for (var i = 0; i < customVars.length; i++) {
-                    $(customVars[i]).remove();
-                }
-                customVars.length = 0;
-                var variables = updateShader(text);
-                for (var entry in variables) {
-                }
-                */
             }
 
             $('#getFunction').click(function() {
@@ -57,9 +47,76 @@ title: Michael Firmin
 
             // controls
             $('#opacity').change(function() {
-                setOpacity((this.checked) ? 1 : 0);
+                fg.setOpacity((this.checked) ? 1 : 0);
             });
+
+            $('#xmin').attr('value', -1);
+            $('#ymin').attr('value', -1);
+            $('#zmin').attr('value', -1);
+            $('#xmax').attr('value', +1);
+            $('#ymax').attr('value', +1);
+            $('#zmax').attr('value', +1);
+
+            $('#xmin').attr('min', -100);
+            $('#ymin').attr('min', -100);
+            $('#zmin').attr('min', -100);
+            $('#xmax').attr('min', -100);
+            $('#ymax').attr('min', -100);
+            $('#zmax').attr('min', -100);
+
+            $('#xmin').attr('max', +100);
+            $('#ymin').attr('max', +100);
+            $('#zmin').attr('max', +100);
+            $('#xmax').attr('max', +100);
+            $('#ymax').attr('max', +100);
+            $('#zmax').attr('max', +100);
             
+            function makeLimVariable(id, def) {
+                var div = $(id);
+                div.mousedown(function(evt) {
+                    evt.preventDefault();
+                    div._dragged = true;
+                    div._mdX = evt.pageX;
+                    div._mdVal = Number(div.attr('value'));
+                });
+
+                $(document).mousemove(function(evt) {
+                    if (div._dragged) {
+                        evt.preventDefault();
+                        var diff = evt.pageX - div._mdX;
+                        div.attr('value', (div._mdVal + diff*(div.attr('max') - div.attr('min'))/1000));
+                        if (div._value > div._max) { div._value = div._max; }
+                        if (div._value < div._min) { div._value = div._min; }
+                        div.html(div.attr('value'));
+                        var updateBounds = {};
+
+                        var which = id[1];
+                        var rest = id.slice(2);
+                        if (rest === 'min') {
+                            updateBounds['x'] = Number(div.attr('value'));
+                        } else {
+                            updateBounds['y'] = Number(div.attr('value'));
+                        }
+                        var setval = {};
+                        setval[which+'Bounds'] = updateBounds;
+                        fg.updateBounds(setval);
+                    }
+                });
+                $(document).mouseup( function(evt) {
+                    evt.preventDefault();
+                    div._dragged = false;
+                });
+
+            }
+
+            makeLimVariable('#xmin');
+            makeLimVariable('#xmax');
+            makeLimVariable('#ymin');
+            makeLimVariable('#ymax');
+            makeLimVariable('#zmin');
+            makeLimVariable('#zmax');
+
+            /*
             $('#xmax').change(function() {
                 updateBounds({'xBounds': {'y': this.value}});
             });
@@ -78,6 +135,7 @@ title: Michael Firmin
             $('#zmin').change(function() {
                 updateBounds({'zBounds': {'x': this.value}});
             });
+            */
             
         });
     </script>
@@ -92,9 +150,9 @@ title: Michael Firmin
     <div id='main'>
         <div id='controls'>
             <input type="checkbox" id="opacity" value="Opaque">Opaque<br>
-            x limits: [<input type="number" id="xmin" value="-1">, <input type="number" id="xmax", value="1">] <br>
-            y limits: [<input type="number" id="ymin" value="-1">, <input type="number" id="ymax", value="1">] <br>
-            z limits: [<input type="number" id="zmin" value="-1">, <input type="number" id="zmax", value="1">] <br>
+            x limits: [<div id="xmin" style="display: inline; text-decoration: underline; color: red;">-1</div>, <div id="xmax" style="display: inline; text-decoration: underline; color: red;">1</div>] <br>
+            y limits: [<div id="ymin" style="display: inline; text-decoration: underline; color: red;">-1</div>, <div id="ymax" style="display: inline; text-decoration: underline; color: red;">1</div>] <br>
+            z limits: [<div id="zmin" style="display: inline; text-decoration: underline; color: red;">-1</div>, <div id="zmax" style="display: inline; text-decoration: underline; color: red;">1</div>] <br>
         </div>
         <div id='grapher'></div>
         <div id='fninput'>

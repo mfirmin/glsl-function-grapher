@@ -50,7 +50,7 @@ FunctionGrapher.prototype.init = function() {
     this.uniforms['yBounds'] = {type: 'v2', value: new THREE.Vector2(-1, 1)};
     this.uniforms['zBounds'] = {type: 'v2', value: new THREE.Vector2(-1, 1)};
 
-    var material = new THREE.ShaderMaterial( { 
+    this.material = new THREE.ShaderMaterial( { 
         uniforms: this.uniforms, 
         vertexShader: vShader, 
         fragmentShader: fShader,
@@ -58,8 +58,10 @@ FunctionGrapher.prototype.init = function() {
         shading: THREE.SmoothShading,
     });
 
+    this.customVarIDs = [];
 
-    this.box = new Box('plot', [2,2,2], {material: material});
+
+    this.box = new Box('plot', [2,2,2], {material: this.material});
     //var box = new Box('plot', [2,2,2] );
 
     this.world.addEntity(this.box);
@@ -74,11 +76,39 @@ FunctionGrapher.prototype.init = function() {
 
 FunctionGrapher.prototype.makeVariable = function(variable) {
 
-    var vardiv = $('<div id="'+variable[1]+'">').append('<label>').text(variable[1]).append('<input id="'+variable[1]+'_input" type="number" value="'+variable[4]+'">');
+    var scope = this;
+
+    var inputdiv = $('<div id="'+variable[1]+'_input">').html(variable[4]).css({'display': 'inline', 'text-decoration': 'underline', 'color': 'red'});
+    var vardiv = $('<div id="'+variable[1]+'">').append(variable[1]+': ').append(inputdiv);
 
     $('#controls').append(vardiv);
 
-    $('#'+variable[1]+'_input').change((function(uni) { return function() { uni.value = this.value; }; })(this.uniforms[variable[1]]));
+    inputdiv.on('mousedown', function(evt) {
+        evt.preventDefault();
+        inputdiv._dragged = true;
+        inputdiv._mdX = evt.pageX;
+        inputdiv._mdVal = Number(vardiv._value);
+    });
+
+    $(document).on('mousemove', function(evt) {
+        if (inputdiv._dragged) {
+            evt.preventDefault();
+            var diff = evt.pageX - inputdiv._mdX;
+            vardiv._value = inputdiv._mdVal + diff*(vardiv._max - vardiv._min)/100;
+            if (vardiv._value > vardiv._max) { vardiv._value = vardiv._max; }
+            if (vardiv._value < vardiv._min) { vardiv._value = vardiv._min; }
+            inputdiv.html(vardiv._value);
+            scope.uniforms[variable[1]].value = Number(vardiv._value);
+        }
+    });
+    $(document).on('mouseup', function(evt) {
+        evt.preventDefault();
+        inputdiv._dragged = false;
+    });
+
+    vardiv._value = Number(variable[4]);
+    vardiv._max = Number(variable[3]);
+    vardiv._min = Number(variable[2]);
 
 };
 
@@ -90,8 +120,8 @@ FunctionGrapher.prototype.findVariables = function(fn) {
     var varPart = reg.exec(fn);
     var extraUniforms = '';
 
-    for (var id in this.customVarIDs) {
-        $(id).remove();
+    for (var i = 0; i < this.customVarIDs.length; i++) {
+        $(this.customVarIDs[i]).remove();
     }
 
     this.customVarIDs = [];
@@ -137,7 +167,7 @@ FunctionGrapher.prototype.updateBounds = function(val) {
     var x = this.uniforms['xBounds'].value; 
     var y = this.uniforms['yBounds'].value;
     var z = this.uniforms['zBounds'].value;
-    var boxnew = new Box('plot', [x.y - x.x, y.y - y.x, z.y - z.x], {material: material});
+    var boxnew = new Box('plot', [x.y - x.x, y.y - y.x, z.y - z.x], {material: this.material});
 
     var step = (Math.max(Math.max(x.y - x.x, y.y - y.x), z.y - z.x))/100;
     this.uniforms['stepsize'].value = step;
