@@ -1,33 +1,43 @@
 
-#info {
-    position: absolute;
-    width: 100%;
-    height: 20%;
-    top: 0;
-}
 
 #main {
     position: absolute;
     width: 100%;
-    height: 80%;
-    bottom: 0;
+    height: 100%;
+    bottom: .5vw;
+}
+
+#controlpanel {
+    position: absolute;
+    width: 39vw;
+    height: 100%;
+    left: .5vw;
+
 }
 
 #controls {
     position: absolute;
-    width: 19vw;
-    height: 100%;
-    left: .5vw;
+    width: 100%;
+    height: 49%;
+    bottom: 0;
     border: 2px solid gray;
+}
 
+#fninput {
+
+    position: absolute;
+    width: 100%;
+    height: 49%;
+    top: .5vw;
 }
 
 #grapher {
 
     position: absolute;
-    width: 30vw;
-    height: 30vw;
-    left: 20vw;
+    width: 50vw;
+    height: 50vw;
+    left: 40vw;
+    top: .5vw;
     border: 2px solid gray;
 
 }
@@ -38,13 +48,6 @@
     height: 100%;
 }
 
-#fninput {
-
-    position: absolute;
-    width: 30vw;
-    height: 100%;
-    right: 15vw;
-}
 
 input[type=number] {
     width: 40px;

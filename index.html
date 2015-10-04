@@ -115,67 +115,38 @@ title: Michael Firmin
             makeLimVariable('#ymax');
             makeLimVariable('#zmin');
             makeLimVariable('#zmax');
-
-            /*
-            $('#xmax').change(function() {
-                updateBounds({'xBounds': {'y': this.value}});
-            });
-            $('#ymax').change(function() {
-                updateBounds({'yBounds': {'y': this.value}});
-            });
-            $('#zmax').change(function() {
-                updateBounds({'zBounds': {'y': this.value}});
-            });
-            $('#xmin').change(function() {
-                updateBounds({'xBounds': {'x': this.value}});
-            });
-            $('#ymin').change(function() {
-                updateBounds({'yBounds': {'x': this.value}});
-            });
-            $('#zmin').change(function() {
-                updateBounds({'zBounds': {'x': this.value}});
-            });
-            */
             
         });
     </script>
     </head>
 <body>
-    <div id='info'>
-        <h4>Raycasting based 3D Function Grapher using GLSL Shaders</h4>
-        This example uses GLSL shaders with Three.js to graph a 3D function using a real time raycasting approach. You can rotate the plot with the mouse, and zoom with the scroll wheel. <br>
-    See this project on <a href="https://github.com/mfirmin/glsl-function-grapher">github</a>.  <br>
-    Blog post coming soon!
-    </div>
     <div id='main'>
-        <div id='controls'>
-            <input type="checkbox" id="opacity" value="Opaque">Opaque<br>
-            x limits: [<div id="xmin" style="display: inline; text-decoration: underline; color: red;">-1</div>, <div id="xmax" style="display: inline; text-decoration: underline; color: red;">1</div>] <br>
-            y limits: [<div id="ymin" style="display: inline; text-decoration: underline; color: red;">-1</div>, <div id="ymax" style="display: inline; text-decoration: underline; color: red;">1</div>] <br>
-            z limits: [<div id="zmin" style="display: inline; text-decoration: underline; color: red;">-1</div>, <div id="zmax" style="display: inline; text-decoration: underline; color: red;">1</div>] <br>
+        <div id='controlpanel'>
+            <div id='controls'>
+                <input type="checkbox" id="opacity" value="Opaque">Opaque<br>
+                x limits: [<div id="xmin" style="display: inline; text-decoration: underline; color: red;">-1</div>, <div id="xmax" style="display: inline; text-decoration: underline; color: red;">1</div>] <br>
+                y limits: [<div id="ymin" style="display: inline; text-decoration: underline; color: red;">-1</div>, <div id="ymax" style="display: inline; text-decoration: underline; color: red;">1</div>] <br>
+                z limits: [<div id="zmin" style="display: inline; text-decoration: underline; color: red;">-1</div>, <div id="zmax" style="display: inline; text-decoration: underline; color: red;">1</div>] <br>
+            </div>
+            <div id='fninput'>
+
+                Try graphing one of the following functions, or write your own below!
+                <p>
+                <button id='clebsch'>Clebsch Diagonal Cubic</button> 
+                <button id='kiss'>Kiss Surface</button> 
+                <button id='sin'>z=sin(xy)</button> 
+                <button id='variables'>Simple Plane</button> 
+                </p>
+
+                Function Input:  <br>
+                0 =
+                <textarea rows="5" cols="80" id="function">81.0*(x*x*x + y*y*y + z*z*z) - &#13;&#10;            189.0*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + &#13;&#10;            54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0&#13;&#10;</textarea> <br>
+                <button id='getFunction'>Graph!</button> <br>
+                Having Trouble? The function must be written using <a href="https://en.wikipedia.org/wiki/OpenGL_Shading_Language">glsl</a> notation. A common error is that glsl is picky about floating point numbers vs integers, so make sure you write "1.0" instead of "1". Input should be in the form "0 = f(x,y,z)", without the "0 ="
+
+            </div>
         </div>
         <div id='grapher'></div>
-        <div id='fninput'>
-            Function Input:  <br>
-            0 =
-            <textarea rows="5" cols="80" id="function">81.0*(x*x*x + y*y*y + z*z*z) - &#13;&#10;            189.0*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + &#13;&#10;            54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0&#13;&#10;</textarea> <br>
-            <button id='getFunction'>Graph!</button> <br>
-            Having Trouble? The function must be written using <a href="https://en.wikipedia.org/wiki/OpenGL_Shading_Language">glsl</a> notation. A common error is that glsl is picky about floating point numbers vs integers, so make sure you write "1.0" instead of "1". Input should be in the form "0 = f(x,y,z)", without the "0 ="
-
-            <p>
-            Try these out: <br>
-            <a href="http://mathworld.wolfram.com/ClebschDiagonalCubic.html">Clebsch Diagonal Cubic</a>: 
-            <button id='clebsch'>Graph!</button> <br>
-            <a href="http://mathworld.wolfram.com/KissSurface.html">Kiss Surface</a>
-            <button id='kiss'>Graph!</button> <br>
-            z=sin(xy)<button id='sin'>Graph!</button> <br>
-            Variables<button id='variables'>Graph!</button> <br>
-            </p>
-
-            Advanced Tips: <br>
-            Create variables in your equation by using the syntax: {{name:min:max:default}} where name is the name of the variable, and min, max, and default are all numbers. This will populate a variable control in the left panel. See the Variables example above!
-        </div>
     </div>
 </body>
 </html>
-&#13;&#10;
