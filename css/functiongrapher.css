@@ -23,6 +23,7 @@
     border: 2px solid gray;
 }
 
+
 #fninput {
 
     position: absolute;
@@ -46,6 +47,12 @@
     position: absolute;
     width: 100%;
     height: 100%;
+}
+
+.equation {
+    display: inline; 
+    text-decoration: underline; 
+    color: red;
 }
 
 

@@ -9723,6 +9723,8 @@ FunctionGrapher.prototype.init = function() {
 
     this.world = new World('raytracer', {element: '#grapher'});
 
+    this.variables = {};
+
     var vShader = 
         'varying vec4 vPosition;\n'+
         'varying vec3 vNormal;\n'+
@@ -9778,41 +9780,52 @@ FunctionGrapher.prototype.init = function() {
     }.bind(this));
 };
 
-FunctionGrapher.prototype.makeVariable = function(variable) {
+FunctionGrapher.prototype.makeVariable = function(name, defaultValue, eqnHTML) {
 
     var scope = this;
 
-    var inputdiv = $('<div id="'+variable[1]+'_input">').html(variable[4]).css({'display': 'inline', 'text-decoration': 'underline', 'color': 'red'});
-    var vardiv = $('<div id="'+variable[1]+'">').append(variable[1]+': ').append(inputdiv);
+    eqnHTML.eqn += '<div id="'+name+'" class="equation">'+ defaultValue+'</div>';
 
-    $('#controls').append(vardiv);
+    scope.variables[name] = {
+        'value': Number(defaultValue), 
+        'defaultValue': Number(defaultValue),  
+        'dragged': false,  
+        'mdX': 0,
+        'mdVal': Number(defaultValue),
+    }
 
-    inputdiv.on('mousedown', function(evt) {
-        evt.preventDefault();
-        inputdiv._dragged = true;
-        inputdiv._mdX = evt.pageX;
-        inputdiv._mdVal = Number(vardiv._value);
-    });
+    function ret() {
+        var inputdiv = $('#'+name);
+
+        inputdiv.on('mousedown', function(evt) {
+            evt.preventDefault();
+            var inputdiv = $('#'+name);
+            scope.variables[name].dragged = true;
+            scope.variables[name].mdX = evt.pageX;
+            scope.variables[name].mdVal = Number(scope.variables[name].value);
+        });
+    }
 
     $(document).on('mousemove', function(evt) {
-        if (inputdiv._dragged) {
+        var inputdiv = $('#'+name);
+
+        if (scope.variables[name].dragged) {
             evt.preventDefault();
-            var diff = evt.pageX - inputdiv._mdX;
-            vardiv._value = inputdiv._mdVal + diff*(vardiv._max - vardiv._min)/100;
-            if (vardiv._value > vardiv._max) { vardiv._value = vardiv._max; }
-            if (vardiv._value < vardiv._min) { vardiv._value = vardiv._min; }
-            inputdiv.html(vardiv._value);
-            scope.uniforms[variable[1]].value = Number(vardiv._value);
+            var diff = evt.pageX - scope.variables[name].mdX;
+            scope.variables[name].value = scope.variables[name].mdVal + diff;
+
+            inputdiv.html(scope.variables[name].value);
+
+            scope.uniforms[name].value = Number(scope.variables[name].value);
         }
     });
     $(document).on('mouseup', function(evt) {
+        var inputdiv = $('#'+name);
         evt.preventDefault();
-        inputdiv._dragged = false;
+        scope.variables[name].dragged = false;
     });
 
-    vardiv._value = Number(variable[4]);
-    vardiv._max = Number(variable[3]);
-    vardiv._min = Number(variable[2]);
+    return ret;
 
 };
 
@@ -9820,7 +9833,10 @@ FunctionGrapher.prototype.findVariables = function(fn) {
 
     var retFn = fn; // copy str.
 
-    var reg = /\{\{(\w+):(\d+):(\d+):(\d+)\}\}/g;
+//    var reg = /\{\{(\w+):(\d+):(\d+):(\d+)\}\}/g;
+
+    var reg = /-?(?:\d+\.?\d*|\d*\.\d+)/g;
+
     var varPart = reg.exec(fn);
     var extraUniforms = '';
 
@@ -9828,21 +9844,38 @@ FunctionGrapher.prototype.findVariables = function(fn) {
         $(this.customVarIDs[i]).remove();
     }
 
+    var eqnHTML = {eqn: '0='};
+
     this.customVarIDs = [];
+
+    var count = 0;
+
+    var callbacks = [];
 
     while (varPart !== null) {
 
-        retFn = retFn.replace(varPart[0], varPart[1]);
+        console.log(varPart[0]);
 
-        this.uniforms[varPart[1]] = {type: 'f', value: varPart[4]};
-        extraUniforms += 'uniform float ' + varPart[1] + ';\n';
+        var name = 'var'+String.fromCharCode(97 + count);
+        retFn = retFn.replace(varPart[0], name);
 
-        this.makeVariable(varPart);
+        this.uniforms[name] = {type: 'f', value: varPart[0]};
+        extraUniforms += 'uniform float ' + name + ';\n';
 
-        this.customVarIDs.push('#'+varPart[1]);
+        callbacks.push(this.makeVariable(name, varPart[0], eqnHTML));
+
+        this.customVarIDs.push('#'+name);
 
         var varPart = reg.exec(fn);
+        count++;
     }
+
+    $('#fndisplay')[0].innerHTML = eqnHTML.eqn;
+
+    for (var i = 0; i < callbacks.length; i++) {
+        callbacks[i]();
+    }
+
 
     return {retFn: retFn, extraUniforms: extraUniforms};
 

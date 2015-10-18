@@ -39,8 +39,8 @@ title: Michael Firmin
                 $('textarea#function').val(text);
                 update(text);
             });
-            $('#variables').click(function() {
-                var text = "\{\{slope:0:1:0\}\}*x + \{\{intercept:0:1:0\}\} - z";
+            $('#plane').click(function() {
+                var text = "1*x + 0 - z";
                 $('textarea#function').val(text);
                 update(text);
             });
@@ -135,11 +135,11 @@ title: Michael Firmin
                 <button id='clebsch'>Clebsch Diagonal Cubic</button> 
                 <button id='kiss'>Kiss Surface</button> 
                 <button id='sin'>z=sin(xy)</button> 
-                <button id='variables'>Simple Plane</button> 
+                <button id='plane'>Simple Plane</button> 
                 </p>
 
                 Function Input:  <br>
-                0 =
+                <div id="fndisplay"></div>
                 <textarea rows="5" cols="80" id="function">81.0*(x*x*x + y*y*y + z*z*z) - &#13;&#10;            189.0*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + &#13;&#10;            54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0&#13;&#10;</textarea> <br>
                 <button id='getFunction'>Graph!</button> <br>
                 Having Trouble? The function must be written using <a href="https://en.wikipedia.org/wiki/OpenGL_Shading_Language">glsl</a> notation. A common error is that glsl is picky about floating point numbers vs integers, so make sure you write "1.0" instead of "1". Input should be in the form "0 = f(x,y,z)", without the "0 ="
