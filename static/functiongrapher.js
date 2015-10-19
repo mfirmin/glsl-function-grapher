@@ -9838,6 +9838,9 @@ FunctionGrapher.prototype.findVariables = function(fn) {
     var reg = /-?(?:\d+\.?\d*|\d*\.\d+)/g;
 
     var varPart = reg.exec(fn);
+
+    var last = reg.lastIndex;
+
     var extraUniforms = '';
 
     for (var i = 0; i < this.customVarIDs.length; i++) {
@@ -9846,6 +9849,11 @@ FunctionGrapher.prototype.findVariables = function(fn) {
 
     var eqnHTML = {eqn: '0='};
 
+    var idx;
+    if (varPart === null) { idx = fn.length; } else { idx = varPart.index; }
+
+    eqnHTML.eqn += fn.substring(0, idx);
+
     this.customVarIDs = [];
 
     var count = 0;
@@ -9853,8 +9861,6 @@ FunctionGrapher.prototype.findVariables = function(fn) {
     var callbacks = [];
 
     while (varPart !== null) {
-
-        console.log(varPart[0]);
 
         var name = 'var'+String.fromCharCode(97 + count);
         retFn = retFn.replace(varPart[0], name);
@@ -9866,7 +9872,13 @@ FunctionGrapher.prototype.findVariables = function(fn) {
 
         this.customVarIDs.push('#'+name);
 
+        var last = reg.lastIndex;
+
         var varPart = reg.exec(fn);
+
+        if (varPart === null) { idx = fn.length; } else { idx = varPart.index; }
+        eqnHTML.eqn += fn.substring(last, idx);
+
         count++;
     }
 
