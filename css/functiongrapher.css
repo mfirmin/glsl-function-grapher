@@ -32,13 +32,22 @@
     top: .5vw;
 }
 
+#fndisplay { 
+    position: absolute;
+    width: 50vw;
+    height: 5vw;
+    left: 40vw;
+    top: .5vw;
+    border: 2px solid gray;
+}
+
 #grapher {
 
     position: absolute;
     width: 50vw;
     height: 50vw;
     left: 40vw;
-    top: .5vw;
+    top: 6vw;
     border: 2px solid gray;
 
 }
