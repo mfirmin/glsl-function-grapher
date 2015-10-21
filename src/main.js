@@ -62,7 +62,6 @@ FunctionGrapher.prototype.init = function() {
 
     this.customVarIDs = [];
 
-
     this.box = new Box('plot', [2,2,2], {material: this.material});
     //var box = new Box('plot', [2,2,2] );
 
@@ -93,16 +92,27 @@ FunctionGrapher.prototype.makeVariable = function(name, defaultValue, eqnHTML) {
     function ret() {
         var inputdiv = $('#'+name);
 
-        inputdiv.on('mousedown', function(evt) {
+        function start(evt) {
             evt.preventDefault();
             var inputdiv = $('#'+name);
             scope.variables[name].dragged = true;
             scope.variables[name].mdX = evt.pageX;
             scope.variables[name].mdVal = Number(scope.variables[name].value);
-        });
+        }
+
+        function touchstart(evt) {
+            evt.preventDefault();
+            var inputdiv = $('#'+name);
+            scope.variables[name].dragged = true;
+            scope.variables[name].mdX = evt.originalEvent.touches[0].pageX;;
+            scope.variables[name].mdVal = Number(scope.variables[name].value);
+        }
+
+        inputdiv.on('mousedown', start);
+        inputdiv.on('touchstart', touchstart);
     }
 
-    $(document).on('mousemove', function(evt) {
+    function update(evt) {
         var inputdiv = $('#'+name);
 
         if (scope.variables[name].dragged) {
@@ -114,12 +124,33 @@ FunctionGrapher.prototype.makeVariable = function(name, defaultValue, eqnHTML) {
 
             scope.uniforms[name].value = Number(scope.variables[name].value);
         }
-    });
-    $(document).on('mouseup', function(evt) {
+    }
+
+    function touchupdate(evt) {
         var inputdiv = $('#'+name);
-        evt.preventDefault();
+
+        if (scope.variables[name].dragged) {
+            evt.preventDefault();
+            var diff = evt.originalEvent.touches[0].pageX - scope.variables[name].mdX;
+            scope.variables[name].value = scope.variables[name].mdVal + diff;
+
+            inputdiv.html(scope.variables[name].value);
+
+            scope.uniforms[name].value = Number(scope.variables[name].value);
+        }
+    }
+
+    $(document).on('mousemove', update);
+    $(document).on('touchmove', touchupdate);
+
+    function end(evt) {
+        var inputdiv = $('#'+name);
+//        evt.preventDefault();
         scope.variables[name].dragged = false;
-    });
+    }
+
+    $(document).on('mouseup', end);
+    $(document).on('touchend', end);
 
     return ret;
 
