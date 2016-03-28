@@ -1,5 +1,5 @@
 
-var Entity = require('./entity');
+import Entity from './entity'
 
 function Cylinder(name, radius, height, opts) {
 
@@ -29,4 +29,4 @@ Cylinder.prototype.initialize = function() {
 
 }
 
-module.exports = Cylinder;
+export default Cylinder;

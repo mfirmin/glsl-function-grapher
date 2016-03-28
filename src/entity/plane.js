@@ -1,5 +1,5 @@
 
-var Entity = require('./entity');
+import Entity from './entity'
 
 function Plane(name, A, B, opts) {
 
@@ -34,4 +34,4 @@ Plane.prototype.initialize = function() {
 
 }
 
-module.exports = Plane;
+export default Plane;

@@ -1,5 +1,5 @@
 
-var Entity = require('./entity');
+import Entity from './entity'
 
 function Capsule(name, radius, height, opts) {
 
@@ -36,9 +36,9 @@ Capsule.prototype.initialize = function() {
     capsule.add(cyl_mesh);
     capsule.add(top_mesh);
     capsule.add(btm_mesh);
-    
+
     this.mesh = capsule;
 
 }
 
-module.exports = Capsule;
+export default Capsule;

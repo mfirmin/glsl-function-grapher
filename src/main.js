@@ -1,8 +1,6 @@
 
-
-var $     = require('jquery');
-var World = require('./world/world');
-var Box   = require('./entity/box');
+import World from './world/world'
+import Box from './entity/box'
 
 var FunctionGrapher = function() {
 
@@ -21,7 +19,7 @@ FunctionGrapher.prototype.init = function() {
 
     this.variables = {};
 
-    var vShader = 
+    var vShader =
         'varying vec4 vPosition;\n'+
         'varying vec3 vNormal;\n'+
         'void main() {\n' +
@@ -32,8 +30,8 @@ FunctionGrapher.prototype.init = function() {
         '}';
 
 
-    var fn = '' + 
-            '81.*(x*x*x + y*y*y + z*z*z) - '+ 
+    var fn = '' +
+            '81.*(x*x*x + y*y*y + z*z*z) - '+
                 '189.*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + '+
                 '54.*(x*y*z) + 126.*(x*y+x*z+y*z) - 9.*(x*x+y*y+z*z) - 9.*(x+y+z) + 1.';
 
@@ -52,9 +50,9 @@ FunctionGrapher.prototype.init = function() {
     this.uniforms['yBounds'] = {type: 'v2', value: new THREE.Vector2(-1, 1)};
     this.uniforms['zBounds'] = {type: 'v2', value: new THREE.Vector2(-1, 1)};
 
-    this.material = new THREE.ShaderMaterial( { 
-        uniforms: this.uniforms, 
-        vertexShader: vShader, 
+    this.material = new THREE.ShaderMaterial( {
+        uniforms: this.uniforms,
+        vertexShader: vShader,
         fragmentShader: fShader,
         side: THREE.DoubleSide,
         shading: THREE.SmoothShading,
@@ -82,9 +80,9 @@ FunctionGrapher.prototype.makeVariable = function(name, defaultValue, eqnHTML) {
     eqnHTML.eqn += '<div id="'+name+'" class="equation">'+ defaultValue+'</div>';
 
     scope.variables[name] = {
-        'value': Number(defaultValue), 
-        'defaultValue': Number(defaultValue),  
-        'dragged': false,  
+        'value': Number(defaultValue),
+        'defaultValue': Number(defaultValue),
+        'dragged': false,
         'mdX': 0,
         'mdVal': Number(defaultValue),
     }
@@ -240,7 +238,7 @@ FunctionGrapher.prototype.updateBounds = function(val) {
             this.uniforms[entry].value[coord] = Number(val[entry][coord]);
         }
     }
-    var x = this.uniforms['xBounds'].value; 
+    var x = this.uniforms['xBounds'].value;
     var y = this.uniforms['yBounds'].value;
     var z = this.uniforms['zBounds'].value;
     var boxnew = new Box('plot', [x.y - x.x, y.y - y.x, z.y - z.x], {material: this.material});
@@ -255,7 +253,7 @@ FunctionGrapher.prototype.updateBounds = function(val) {
 
 
     boxnew.mesh.updateMatrix();
-    
+
     this.world.addEntity(boxnew);
 
     this.box = boxnew;
@@ -278,7 +276,7 @@ FunctionGrapher.prototype.makeFragmentShader = function(fn, extraUniforms) {
         // Describe ROI as a sphere later?
 
         'float fn(float x, float y, float z) {\n' +
-            'return ' + 
+            'return ' +
             fn + ';\n' +
         '}\n'+
 
@@ -286,7 +284,7 @@ FunctionGrapher.prototype.makeFragmentShader = function(fn, extraUniforms) {
             'return vec3(1.,1.,1.)*(pt.xyz/vec3( xBounds.y - xBounds.x, yBounds.y - yBounds.x, zBounds.y - zBounds.x) + .5);\n'+
         '}\n' +
 
-        'void main() {' + 
+        'void main() {' +
             'vec3 ro = cameraPosition;\n'+
             'vec3 dir = vPosition.xyz - ro;\n'+
             'float t_entry = length(dir);\n'+
@@ -302,7 +300,7 @@ FunctionGrapher.prototype.makeFragmentShader = function(fn, extraUniforms) {
             'int intersects = 0;\n'+
 
             'float last = 0.0;'+
-            'vec3 tols = vec3((xBounds.y - xBounds.x)*.01, (yBounds.y - yBounds.x)*.01, (zBounds.y - zBounds.x)*.01);\n'+ 
+            'vec3 tols = vec3((xBounds.y - xBounds.x)*.01, (yBounds.y - yBounds.x)*.01, (zBounds.y - zBounds.x)*.01);\n'+
             'for (int i = 0; i < 1000; i++) {\n'+
                 // outside roi case.
                 'if (pt.z < zBounds.x-tols.z || pt.z > zBounds.y+tols.z || pt.x < xBounds.x-tols.x || pt.x > xBounds.y+tols.x || pt.y > yBounds.y+tols.y || pt.y < yBounds.x-tols.y) { break; }\n'+
@@ -338,7 +336,7 @@ FunctionGrapher.prototype.makeFragmentShader = function(fn, extraUniforms) {
                         'I += vec3(1.,1.,1.)*(pt.xyz/2.+.5);\n'+
                         'intersects++;\n'+
                     '}\n'+
-                        
+
                 '}\n'+
                 'last = curr;\n'+
                 'pt = pt + rskip;\n'+
@@ -346,7 +344,7 @@ FunctionGrapher.prototype.makeFragmentShader = function(fn, extraUniforms) {
 
             'if ( opacity < 1.) {\n'+
                 'if (I == vec3(0.,0.,0.)) { gl_FragColor = vec4(1.,1.,1.,1.); return; }\n'+
-                'gl_FragColor = vec4((I/float(intersects)),1.);\n'+ 
+                'gl_FragColor = vec4((I/float(intersects)),1.);\n'+
                 'return;\n'+
             '}\n'+
             'gl_FragColor = vec4(1.,1.,1.,1.);\n'+

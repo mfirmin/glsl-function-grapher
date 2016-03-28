@@ -1,5 +1,5 @@
 
-var Entity = require('./entity');
+import Entity from './entity'
 
 function Sphere(name, radius, height, opts) {
 
@@ -29,4 +29,4 @@ Sphere.prototype.initialize = function() {
 
 }
 
-module.exports = Sphere;
+export default Sphere;

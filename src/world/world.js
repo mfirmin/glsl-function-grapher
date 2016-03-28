@@ -1,8 +1,8 @@
-var Box      = require('../entity/box');
-var Cylinder = require('../entity/cylinder');
-var Sphere   = require('../entity/sphere');
-var Capsule  = require('../entity/capsule');
-var Plane    = require('../entity/plane');
+import Box from '../entity/box'
+import Cylinder from '../entity/cylinder'
+import Sphere from '../entity/sphere'
+import Capsule from '../entity/capsule'
+import Plane from '../entity/plane'
 
 function World(name, opts) {
 
@@ -56,15 +56,12 @@ World.prototype.initialize = function() {
 
     $(document).ready(function() {
 //        controls = new THREE.TrackballControls( this.camera, this.renderer.domElement);
-        controls = new THREE.TrackballControls( this.camera, (this.opts.element === undefined) ? $('body') : $(this.opts.element)[0]);
-       // controls.target.set( 0, 0, 0 );
+        var controls = new THREE.TrackballControls( this.camera, (this.opts.element === undefined) ? $('body') : $(this.opts.element)[0]);
 
         controls.rotateSpeed = 20.0;
         controls.zoomSpeed = 1.2;
-     //   controls.panSpeed = 0.8;
 
         controls.noZoom = false;
-    //    controls.noPan = false;
 
         controls.staticMoving = true;
         controls.dynamicDampingFactor = 0.3;
@@ -103,7 +100,7 @@ World.prototype.setSize = function() {
 };
 
 World.prototype.addEntity = function(e) {
-    
+
     var name = e.name;
     if (name in this.entities) {
         console.error('Cannot add entity. Entity with name ' + name + 'already exists.');
@@ -199,4 +196,4 @@ World.prototype.go = function() {
     renderLoop();
 }
 
-module.exports = World;
+export default World;
