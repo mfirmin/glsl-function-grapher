@@ -354,5 +354,4 @@ FunctionGrapher.prototype.makeFragmentShader = function(fn, extraUniforms) {
 
 }
 
-window.FunctionGrapher = FunctionGrapher;
-
+export default FunctionGrapher
