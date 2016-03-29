@@ -1,4 +1,3 @@
-
 import World from './world/world'
 import Box from './entity/box'
 
@@ -305,23 +304,6 @@ FunctionGrapher.prototype.makeFragmentShader = function(fn, extraUniforms) {
                 // outside roi case.
                 'if (pt.z < zBounds.x-tols.z || pt.z > zBounds.y+tols.z || pt.x < xBounds.x-tols.x || pt.x > xBounds.y+tols.x || pt.y > yBounds.y+tols.y || pt.y < yBounds.x-tols.y) { break; }\n'+
                 // plot outline
-                'if (    (pt.z > zBounds.y-1.*tols.z && pt.y > yBounds.y-1.*tols.y) ||\n'+
-                        '(pt.z > zBounds.y-1.*tols.z && pt.y < yBounds.x+1.*tols.y) ||\n'+
-                        '(pt.z > zBounds.y-1.*tols.z && pt.x > xBounds.y-1.*tols.x) ||\n'+
-                        '(pt.z > zBounds.y-1.*tols.z && pt.x < xBounds.x+1.*tols.x) ||\n'+
-
-                        '(pt.z < zBounds.x+1.*tols.z && pt.y > yBounds.y-1.*tols.y) ||\n'+
-                        '(pt.z < zBounds.x+1.*tols.z && pt.y < yBounds.x+1.*tols.y) ||\n'+
-                        '(pt.z < zBounds.x+1.*tols.z && pt.x > xBounds.y-1.*tols.x) ||\n'+
-                        '(pt.z < zBounds.x+1.*tols.z && pt.x < xBounds.x+1.*tols.x) ||\n'+
-
-                        '(pt.x < xBounds.x+1.*tols.x && pt.y > yBounds.y-1.*tols.y) ||\n'+
-                        '(pt.x < xBounds.x+1.*tols.x && pt.y < yBounds.x+1.*tols.y) ||\n'+
-                        '(pt.x > xBounds.y-1.*tols.x && pt.y > yBounds.y-1.*tols.y) ||\n'+
-                        '(pt.x > xBounds.y-1.*tols.x && pt.y < yBounds.x+1.*tols.y)\n'+
-                        ') { \n'+
-                    'gl_FragColor = vec4(0.,0.,0.,1.); return;\n'+
-                '}\n'+
                 'float curr = 0.;\n'+
                 'curr = fn(pt.x, pt.y, pt.z);\n'+
 
