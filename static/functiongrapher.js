@@ -445,155 +445,145 @@ var FunctionGrapher = (function () {
         renderLoop();
     }
 
-    var FunctionGrapher = function() {
+    class FunctionGrapher {
+        constructor() {
+            this.world = new World('raytracer', { element: '#grapher' });
 
-        this.init();
-
-        $('#grapher').append(this.world.panel);
-        this.world.setSize();
-
-    };
-
-    FunctionGrapher.prototype.constructor = FunctionGrapher;
-
-    FunctionGrapher.prototype.init = function() {
-
-        this.world = new World('raytracer', {element: '#grapher'});
-
-        this.variables = {};
-
-        var vShader =
-            'varying vec4 vPosition;\n'+
-            'varying vec3 vNormal;\n'+
-            'void main() {\n' +
-                'vPosition = modelMatrix * vec4(position, 1.0);\n' +
-                'vNormal = normal;\n' +
-                'gl_Position = ' +
-                    'projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n' +
-            '}';
-
-
-        var fn = '' +
-                '81.*(x*x*x + y*y*y + z*z*z) - '+
-                    '189.*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + '+
-                    '54.*(x*y*z) + 126.*(x*y+x*z+y*z) - 9.*(x*x+y*y+z*z) - 9.*(x+y+z) + 1.';
-
-        var fShader = this.makeFragmentShader(fn);
-
-        this.uniforms = {};
-
-        this.uniforms['lightsource'] = {type: 'v3', value: new THREE.Vector3(10, 10, -30)};
-        // Stepsize for sampling... 1 seems a good compromise between real-time shading and quality
-        // on my MBP
-        this.uniforms['stepsize'] = {type: 'f', value: .01};
-        this.uniforms['opacity'] = {type: 'f', value: 0.5};
-        this.uniforms['surface'] = {type: 'f', value: 0.};
-
-        this.uniforms['xBounds'] = {type: 'v2', value: new THREE.Vector2(-1, 1)};
-        this.uniforms['yBounds'] = {type: 'v2', value: new THREE.Vector2(-1, 1)};
-        this.uniforms['zBounds'] = {type: 'v2', value: new THREE.Vector2(-1, 1)};
-
-        this.material = new THREE.ShaderMaterial( {
-            uniforms: this.uniforms,
-            vertexShader: vShader,
-            fragmentShader: fShader,
-            side: THREE.DoubleSide,
-            shading: THREE.SmoothShading,
-        });
-
-        this.customVarIDs = [];
-
-        this.box = new Box('plot', [2,2,2], {material: this.material});
-        //var box = new Box('plot', [2,2,2] );
-
-        this.world.addEntity(this.box);
-
-
-        this.world.go();
-
-        $(window).resize(function() {
+            $('#grapher').append(this.world.panel);
             this.world.setSize();
-        }.bind(this));
-    };
 
-    FunctionGrapher.prototype.makeVariable = function(name, defaultValue, eqnHTML) {
 
-        var scope = this;
+            this.variables = {};
 
-        eqnHTML.eqn += '<div id="'+name+'" class="equation">'+ defaultValue+'</div>';
+            this.vShader =
+                'varying vec4 vPosition;\n' +
+                'varying vec3 vNormal;\n' +
+                'void main() {\n' +
+                    'vPosition = modelMatrix * vec4(position, 1.0);\n' +
+                    'vNormal = normal;\n' +
+                    'gl_Position = ' +
+                        'projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n' +
+                '}';
 
-        scope.variables[name] = {
-            'value': Number(defaultValue),
-            'defaultValue': Number(defaultValue),
-            'dragged': false,
-            'mdX': 0,
-            'mdVal': Number(defaultValue),
+
+            this.fn = '' +
+                    '81.*(x*x*x + y*y*y + z*z*z) - ' +
+                        '189.*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + ' +
+                        '54.*(x*y*z) + 126.*(x*y+x*z+y*z) - 9.*(x*x+y*y+z*z) - 9.*(x+y+z) + 1.';
+
+            this.fShader = this.makeFragmentShader(this.fn);
+
+            this.uniforms = {};
+
+            this.uniforms.lightsource = { type: 'v3', value: new THREE.Vector3(10, 10, -30) };
+            // Stepsize for sampling... 1 seems a good compromise between real-time shading and quality
+            // on my MBP
+            this.uniforms.stepsize = { type: 'f', value: 0.01 };
+            this.uniforms.opacity = { type: 'f', value: 0.5 };
+            this.uniforms.surface = { type: 'f', value: 0.0 };
+
+            this.uniforms.xBounds = { type: 'v2', value: new THREE.Vector2(-1, 1) };
+            this.uniforms.yBounds = { type: 'v2', value: new THREE.Vector2(-1, 1) };
+            this.uniforms.zBounds = { type: 'v2', value: new THREE.Vector2(-1, 1) };
+
+            this.material = new THREE.ShaderMaterial({
+                uniforms:       this.uniforms,
+                vertexShader:   this.vShader,
+                fragmentShader: this.fShader,
+                side:           THREE.DoubleSide,
+                shading:        THREE.SmoothShading,
+            });
+
+            this.customVarIDs = [];
+
+            this.box = new Box('plot', [2, 2, 2], { material: this.material });
+
+            this.world.addEntity(this.box);
+
+
+            this.world.go();
+
+            $(window).resize(() => this.world.setSize());
         }
 
-        function ret() {
-            var inputdiv = $('#'+name);
+        makeVariable(name, defaultValue, eqnHTML) {
+            const scope = this;
 
-            function start(evt) {
-                evt.preventDefault();
+            eqnHTML.eqn += '<div id="'+name+'" class="equation">'+ defaultValue+'</div>';
+
+            this.variables[name] = {
+                'value': Number(defaultValue),
+                'defaultValue': Number(defaultValue),
+                'dragged': false,
+                'mdX': 0,
+                'mdVal': Number(defaultValue),
+            };
+
+            function ret() {
                 var inputdiv = $('#'+name);
-                scope.variables[name].dragged = true;
-                scope.variables[name].mdX = evt.pageX;
-                scope.variables[name].mdVal = Number(scope.variables[name].value);
+
+                function start(evt) {
+                    evt.preventDefault();
+                    var inputdiv = $('#'+name);
+                    scope.variables[name].dragged = true;
+                    scope.variables[name].mdX = evt.pageX;
+                    scope.variables[name].mdVal = Number(scope.variables[name].value);
+                }
+
+                function touchstart(evt) {
+                    evt.preventDefault();
+                    var inputdiv = $('#'+name);
+                    scope.variables[name].dragged = true;
+                    scope.variables[name].mdX = evt.originalEvent.touches[0].pageX;;
+                    scope.variables[name].mdVal = Number(scope.variables[name].value);
+                }
+
+                inputdiv.on('mousedown', start);
+                inputdiv.on('touchstart', touchstart);
             }
 
-            function touchstart(evt) {
-                evt.preventDefault();
+            function update(evt) {
                 var inputdiv = $('#'+name);
-                scope.variables[name].dragged = true;
-                scope.variables[name].mdX = evt.originalEvent.touches[0].pageX;;
-                scope.variables[name].mdVal = Number(scope.variables[name].value);
+
+                if (scope.variables[name].dragged) {
+                    evt.preventDefault();
+                    var diff = evt.pageX - scope.variables[name].mdX;
+                    scope.variables[name].value = scope.variables[name].mdVal + diff;
+
+                    inputdiv.html(scope.variables[name].value);
+
+                    scope.uniforms[name].value = Number(scope.variables[name].value);
+                }
             }
 
-            inputdiv.on('mousedown', start);
-            inputdiv.on('touchstart', touchstart);
-        }
+            function touchupdate(evt) {
+                var inputdiv = $('#'+name);
 
-        function update(evt) {
-            var inputdiv = $('#'+name);
+                if (scope.variables[name].dragged) {
+                    evt.preventDefault();
+                    var diff = evt.originalEvent.touches[0].pageX - scope.variables[name].mdX;
+                    scope.variables[name].value = scope.variables[name].mdVal + diff;
 
-            if (scope.variables[name].dragged) {
-                evt.preventDefault();
-                var diff = evt.pageX - scope.variables[name].mdX;
-                scope.variables[name].value = scope.variables[name].mdVal + diff;
+                    inputdiv.html(scope.variables[name].value);
 
-                inputdiv.html(scope.variables[name].value);
-
-                scope.uniforms[name].value = Number(scope.variables[name].value);
+                    scope.uniforms[name].value = Number(scope.variables[name].value);
+                }
             }
-        }
 
-        function touchupdate(evt) {
-            var inputdiv = $('#'+name);
+            $(document).on('mousemove', update);
+            $(document).on('touchmove', touchupdate);
 
-            if (scope.variables[name].dragged) {
-                evt.preventDefault();
-                var diff = evt.originalEvent.touches[0].pageX - scope.variables[name].mdX;
-                scope.variables[name].value = scope.variables[name].mdVal + diff;
-
-                inputdiv.html(scope.variables[name].value);
-
-                scope.uniforms[name].value = Number(scope.variables[name].value);
+            function end(evt) {
+                var inputdiv = $('#'+name);
+        //        evt.preventDefault();
+                scope.variables[name].dragged = false;
             }
+
+            $(document).on('mouseup', end);
+            $(document).on('touchend', end);
+
+            return ret;
         }
-
-        $(document).on('mousemove', update);
-        $(document).on('touchmove', touchupdate);
-
-        function end(evt) {
-            var inputdiv = $('#'+name);
-    //        evt.preventDefault();
-            scope.variables[name].dragged = false;
-        }
-
-        $(document).on('mouseup', end);
-        $(document).on('touchend', end);
-
-        return ret;
 
     };
 
@@ -750,9 +740,8 @@ var FunctionGrapher = (function () {
                     // plot outline
                     'float curr = 0.;\n'+
                     'curr = fn(pt.x, pt.y, pt.z);\n'+
-                    'if (i == 0) { last = curr; }\n'+
 
-                    'if (last*curr <= 0.) {\n'+
+                    'if (last*curr < 0.) {\n'+
                         'vec3 grad = vec3(0.,0.,0.);\n'+
 
                          // Gradient-less coloring?

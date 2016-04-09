@@ -1,0 +1,146 @@
+---
+title: Michael Firmin
+---
+<!DOCTYPE html>
+<html>
+    <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>GLSL 3D Function Grapher</title>
+
+    <link rel="stylesheet" type="text/css" href="css/functiongrapher.css">
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+    <script type="text/javascript" src="static/lib/three.min.js"></script>
+    <script type="text/javascript" src="static/lib/TrackballControls.js"></script>
+    <script src="static/functiongrapher.js"></script>
+    <script>
+        $(document).ready(function() {
+            var fg = new FunctionGrapher();
+
+            var functions = {
+                'clebsch': '81.0*(x*x*x + y*y*y + z*z*z) - 189.0*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + 54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0',
+                'kiss': 'z*z*z*z - z*z*z*z*z - x*x - y*y',
+                'sin': 'sin(x*y) - z',
+                'plane': '1*x + 0 - z',
+            }
+
+            function update(functionName) {
+                var text;
+                if (functionName !== undefined && functions[functionName] !== undefined) {
+                    text = functions[functionName];
+                    $('textarea#functionbox').val(text);
+                } else {
+                    text = $('textarea#functionbox').val();
+                }
+                fg.updateShader(text);
+            }
+
+            $('#getFunction').click(() => update());
+            $('#clebsch').click(() => update('clebsch'));
+            $('#kiss').click(() => update('kiss'));
+            $('#sin').click(() => update('sin'));
+            $('#plane').click(() => update('plane'));
+
+            // controls
+            $('#opacity').change(function() {
+                fg.setOpacity((this.checked) ? 1 : 0);
+            });
+
+            $('#xmin').attr('value', -1);
+            $('#ymin').attr('value', -1);
+            $('#zmin').attr('value', -1);
+            $('#xmax').attr('value', +1);
+            $('#ymax').attr('value', +1);
+            $('#zmax').attr('value', +1);
+
+            $('#xmin').attr('min', -100);
+            $('#ymin').attr('min', -100);
+            $('#zmin').attr('min', -100);
+            $('#xmax').attr('min', -100);
+            $('#ymax').attr('min', -100);
+            $('#zmax').attr('min', -100);
+
+            $('#xmin').attr('max', +100);
+            $('#ymin').attr('max', +100);
+            $('#zmin').attr('max', +100);
+            $('#xmax').attr('max', +100);
+            $('#ymax').attr('max', +100);
+            $('#zmax').attr('max', +100);
+
+            function makeLimVariable(id, def) {
+                var div = $(id);
+                div.mousedown(function(evt) {
+                    evt.preventDefault();
+                    div._dragged = true;
+                    div._mdX = evt.pageX;
+                    div._mdVal = Number(div.attr('value'));
+                });
+
+                $(document).mousemove(function(evt) {
+                    if (div._dragged) {
+                        evt.preventDefault();
+                        var diff = evt.pageX - div._mdX;
+                        div.attr('value', (div._mdVal + diff*(div.attr('max') - div.attr('min'))/1000));
+                        if (div._value > div._max) { div._value = div._max; }
+                        if (div._value < div._min) { div._value = div._min; }
+                        div.html(div.attr('value'));
+                        var updateBounds = {};
+
+                        var which = id[1];
+                        var rest = id.slice(2);
+                        if (rest === 'min') {
+                            updateBounds['x'] = Number(div.attr('value'));
+                        } else {
+                            updateBounds['y'] = Number(div.attr('value'));
+                        }
+                        var setval = {};
+                        setval[which+'Bounds'] = updateBounds;
+                        fg.updateBounds(setval);
+                    }
+                });
+                $(document).mouseup( function(evt) {
+                    evt.preventDefault();
+                    div._dragged = false;
+                });
+
+            }
+
+            makeLimVariable('#xmin');
+            makeLimVariable('#xmax');
+            makeLimVariable('#ymin');
+            makeLimVariable('#ymax');
+            makeLimVariable('#zmin');
+            makeLimVariable('#zmax');
+
+        });
+    </script>
+    </head>
+<body>
+    <div id='main'>
+        <div id='controlpanel'>
+            <div id='controls'>
+                <input type="checkbox" id="opacity" value="Opaque">Opaque<br>
+                x limits: [<div id="xmin" style="display: inline; text-decoration: underline; color: red;">-1</div>, <div id="xmax" style="display: inline; text-decoration: underline; color: red;">1</div>] <br>
+                y limits: [<div id="ymin" style="display: inline; text-decoration: underline; color: red;">-1</div>, <div id="ymax" style="display: inline; text-decoration: underline; color: red;">1</div>] <br>
+                z limits: [<div id="zmin" style="display: inline; text-decoration: underline; color: red;">-1</div>, <div id="zmax" style="display: inline; text-decoration: underline; color: red;">1</div>] <br>
+            </div>
+            <div id='fninput'>
+
+
+                Function Input: <br>
+                <textarea rows="5" cols="80" id="functionbox">81.0*(x*x*x + y*y*y + z*z*z) - &#13;&#10;            189.0*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + &#13;&#10;            54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0&#13;&#10;</textarea> <br>
+                <button id='getFunction'>Graph!</button> <br>
+                <p>
+                <button id='clebsch'>Clebsch Diagonal Cubic</button>
+                <button id='kiss'>Kiss Surface</button>
+                <button id='sin'>z=sin(xy)</button>
+                <button id='plane'>Simple Plane</button>
+                </p>
+
+
+            </div>
+        </div>
+        <div id="fndisplay"></div>
+        <div id='grapher'></div>
+    </div>
+</body>
+</html>
