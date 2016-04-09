@@ -1,14 +1,12 @@
-import World from './world/world'
-import Box from './entity/box'
+import World from './world/world';
+import Box from './entity/box';
 
-var FunctionGrapher = function() {
-
+function FunctionGrapher() {
     this.init();
 
     $('#grapher').append(this.world.panel);
     this.world.setSize();
-
-};
+}
 
 FunctionGrapher.prototype.constructor = FunctionGrapher;
 

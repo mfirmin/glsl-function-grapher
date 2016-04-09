@@ -1,0 +1,23 @@
+{
+  "name": "glsl-function-grapher",
+  "version": "0.0.0",
+  "description": "raymarching 3d function grapher",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mfirmin/glsl-function-grapher.git"
+  },
+  "author": "Michael Firmin",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/mfirmin/glsl-function-grapher/issues"
+  },
+  "devDependencies": {
+    "eslint-plugin-react": "~4.3.0",
+    "eslint": "~2.7.0",
+    "eslint-config-airbnb": "~6.2.0"
+  }
+}
