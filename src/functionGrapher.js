@@ -63,268 +63,131 @@ class FunctionGrapher {
         $(window).resize(() => this.world.setSize());
     }
 
-    makeVariable(name, defaultValue, eqnHTML) {
-        const scope = this;
-
-        eqnHTML.eqn += '<div id="'+name+'" class="equation">'+ defaultValue+'</div>';
-
-        this.variables[name] = {
-            'value': Number(defaultValue),
-            'defaultValue': Number(defaultValue),
-            'dragged': false,
-            'mdX': 0,
-            'mdVal': Number(defaultValue),
-        };
-
-        function ret() {
-            var inputdiv = $('#'+name);
-
-            function start(evt) {
-                evt.preventDefault();
-                var inputdiv = $('#'+name);
-                scope.variables[name].dragged = true;
-                scope.variables[name].mdX = evt.pageX;
-                scope.variables[name].mdVal = Number(scope.variables[name].value);
-            }
-
-            function touchstart(evt) {
-                evt.preventDefault();
-                var inputdiv = $('#'+name);
-                scope.variables[name].dragged = true;
-                scope.variables[name].mdX = evt.originalEvent.touches[0].pageX;;
-                scope.variables[name].mdVal = Number(scope.variables[name].value);
-            }
-
-            inputdiv.on('mousedown', start);
-            inputdiv.on('touchstart', touchstart);
-        }
-
-        function update(evt) {
-            var inputdiv = $('#'+name);
-
-            if (scope.variables[name].dragged) {
-                evt.preventDefault();
-                var diff = evt.pageX - scope.variables[name].mdX;
-                scope.variables[name].value = scope.variables[name].mdVal + diff;
-
-                inputdiv.html(scope.variables[name].value);
-
-                scope.uniforms[name].value = Number(scope.variables[name].value);
-            }
-        }
-
-        function touchupdate(evt) {
-            var inputdiv = $('#'+name);
-
-            if (scope.variables[name].dragged) {
-                evt.preventDefault();
-                var diff = evt.originalEvent.touches[0].pageX - scope.variables[name].mdX;
-                scope.variables[name].value = scope.variables[name].mdVal + diff;
-
-                inputdiv.html(scope.variables[name].value);
-
-                scope.uniforms[name].value = Number(scope.variables[name].value);
-            }
-        }
-
-        $(document).on('mousemove', update);
-        $(document).on('touchmove', touchupdate);
-
-        function end(evt) {
-            var inputdiv = $('#'+name);
-    //        evt.preventDefault();
-            scope.variables[name].dragged = false;
-        }
-
-        $(document).on('mouseup', end);
-        $(document).on('touchend', end);
-
-        return ret;
-    }
-
-};
-
-FunctionGrapher.prototype.findVariables = function(fn) {
-
-    var retFn = fn; // copy str.
-
-//    var reg = /\{\{(\w+):(\d+):(\d+):(\d+)\}\}/g;
-
-    var reg = /-?(?:\d+\.?\d*|\d*\.\d+)/g;
-
-    var varPart = reg.exec(fn);
-
-    var last = reg.lastIndex;
-
-    var extraUniforms = '';
-
-    for (var i = 0; i < this.customVarIDs.length; i++) {
-        $(this.customVarIDs[i]).remove();
-    }
-
-    var eqnHTML = {eqn: '0='};
-
-    var idx;
-    if (varPart === null) { idx = fn.length; } else { idx = varPart.index; }
-
-    eqnHTML.eqn += fn.substring(0, idx);
-
-    this.customVarIDs = [];
-
-    var count = 0;
-
-    var callbacks = [];
-
-    while (varPart !== null) {
-
-        var name = 'var'+String.fromCharCode(97 + count);
-        retFn = retFn.replace(varPart[0], name);
+    findVariables(fn) {
 
         this.uniforms[name] = {type: 'f', value: varPart[0]};
         extraUniforms += 'uniform float ' + name + ';\n';
 
-        callbacks.push(this.makeVariable(name, varPart[0], eqnHTML));
-
-        this.customVarIDs.push('#'+name);
-
-        var last = reg.lastIndex;
-
-        var varPart = reg.exec(fn);
-
-        if (varPart === null) { idx = fn.length; } else { idx = varPart.index; }
-        eqnHTML.eqn += fn.substring(last, idx);
-
-        count++;
-    }
-
-    $('#fndisplay')[0].innerHTML = eqnHTML.eqn;
-
-    for (var i = 0; i < callbacks.length; i++) {
-        callbacks[i]();
     }
 
 
-    return {retFn: retFn, extraUniforms: extraUniforms};
+    updateShader(fn) {
+        var ret = this.findVariables(fn);
+        var fragShader = this.makeFragmentShader(ret.retFn, ret.extraUniforms);
+        this.box.opts.material.fragmentShader = fragShader;
+        this.box.opts.material.needsUpdate = true;
+    }
 
-}
+    setOpacity(val) {
+        this.uniforms['opacity'].value = val;
+    }
 
-FunctionGrapher.prototype.updateShader = function(fn) {
-    var ret = this.findVariables(fn);
-    var fragShader = this.makeFragmentShader(ret.retFn, ret.extraUniforms);
-    this.box.opts.material.fragmentShader = fragShader;
-    this.box.opts.material.needsUpdate = true;
-}
+    updateBounds(val) {
+        this.world.removeEntity(this.box);
 
-FunctionGrapher.prototype.setOpacity = function(val) {
-    this.uniforms['opacity'].value = val;
-}
-
-FunctionGrapher.prototype.updateBounds = function(val) {
-
-    this.world.removeEntity(this.box);
-
-    for (var entry in val) {
-        for (var coord in val[entry]) {
-            this.uniforms[entry].value[coord] = Number(val[entry][coord]);
+        for (var entry in val) {
+            for (var coord in val[entry]) {
+                this.uniforms[entry].value[coord] = Number(val[entry][coord]);
+            }
         }
+        var x = this.uniforms['xBounds'].value;
+        var y = this.uniforms['yBounds'].value;
+        var z = this.uniforms['zBounds'].value;
+        var boxnew = new Box('plot', [x.y - x.x, y.y - y.x, z.y - z.x], {material: this.material});
+
+        var step = (Math.max(Math.max(x.y - x.x, y.y - y.x), z.y - z.x))/100;
+        this.uniforms['stepsize'].value = step;
+
+
+        boxnew.mesh.position.x = (x.x + x.y)/2.
+        boxnew.mesh.position.y = (y.x + y.y)/2.
+        boxnew.mesh.position.z = (z.x + z.y)/2.
+
+
+        boxnew.mesh.updateMatrix();
+
+        this.world.addEntity(boxnew);
+
+        this.box = boxnew;
     }
-    var x = this.uniforms['xBounds'].value;
-    var y = this.uniforms['yBounds'].value;
-    var z = this.uniforms['zBounds'].value;
-    var boxnew = new Box('plot', [x.y - x.x, y.y - y.x, z.y - z.x], {material: this.material});
 
-    var step = (Math.max(Math.max(x.y - x.x, y.y - y.x), z.y - z.x))/100;
-    this.uniforms['stepsize'].value = step;
+    makeFragmentShader(fn, extraUniforms) {
 
+        extraUniforms = (extraUniforms === undefined) ? '' : extraUniforms;
 
-    boxnew.mesh.position.x = (x.x + x.y)/2.
-    boxnew.mesh.position.y = (y.x + y.y)/2.
-    boxnew.mesh.position.z = (z.x + z.y)/2.
+        var fShader = '' +
+            'varying vec4 vPosition;\n'+
+            'uniform vec3 lightsource;\n'+
+            'uniform float stepsize;\n'+
+            'uniform float opacity;\n'+
+            'uniform float surface;\n'+
+            'uniform vec2 xBounds;\n'+
+            'uniform vec2 yBounds;\n'+
+            'uniform vec2 zBounds;\n'+
+            extraUniforms +
+            // Describe ROI as a sphere later?
 
+            'float fn(float x, float y, float z) {\n' +
+                'return ' +
+                fn + ';\n' +
+            '}\n'+
 
-    boxnew.mesh.updateMatrix();
+            'vec3 ptToColor(vec3 pt) {\n'+
+                'return vec3(1.,1.,1.)*(pt.xyz/vec3( xBounds.y - xBounds.x, yBounds.y - yBounds.x, zBounds.y - zBounds.x) + .5);\n'+
+            '}\n' +
 
-    this.world.addEntity(boxnew);
+            'void main() {' +
+                'vec3 ro = cameraPosition;\n'+
+                'vec3 dir = vPosition.xyz - ro;\n'+
+                'float t_entry = length(dir);\n'+
+                'vec3 rd = normalize(dir);\n'+
 
-    this.box = boxnew;
-};
+                'if (t_entry < 0.) { gl_FragColor = vec4(0.,0.,0.,1.); return; }\n'+
 
-FunctionGrapher.prototype.makeFragmentShader = function(fn, extraUniforms) {
+                'vec3 pt = ro+rd*t_entry;\n'+
 
-    extraUniforms = (extraUniforms === undefined) ? '' : extraUniforms;
+                'vec3 rskip = normalize(rd)*stepsize;\n'+
 
-    var fShader = '' +
-        'varying vec4 vPosition;\n'+
-        'uniform vec3 lightsource;\n'+
-        'uniform float stepsize;\n'+
-        'uniform float opacity;\n'+
-        'uniform float surface;\n'+
-        'uniform vec2 xBounds;\n'+
-        'uniform vec2 yBounds;\n'+
-        'uniform vec2 zBounds;\n'+
-        extraUniforms +
-        // Describe ROI as a sphere later?
+                'vec3 I = vec3(0.,0.,0.);\n'+
+                'int intersects = 0;\n'+
 
-        'float fn(float x, float y, float z) {\n' +
-            'return ' +
-            fn + ';\n' +
-        '}\n'+
+                'float last = 0.0;'+
+                'vec3 tols = vec3((xBounds.y - xBounds.x)*.01, (yBounds.y - yBounds.x)*.01, (zBounds.y - zBounds.x)*.01);\n'+
+                'for (int i = 0; i < 1000; i++) {\n'+
+                    // outside roi case.
+                    'if (pt.z < zBounds.x-tols.z || pt.z > zBounds.y+tols.z || pt.x < xBounds.x-tols.x || pt.x > xBounds.y+tols.x || pt.y > yBounds.y+tols.y || pt.y < yBounds.x-tols.y) { break; }\n'+
+                    // plot outline
+                    'float curr = 0.;\n'+
+                    'curr = fn(pt.x, pt.y, pt.z);\n'+
 
-        'vec3 ptToColor(vec3 pt) {\n'+
-            'return vec3(1.,1.,1.)*(pt.xyz/vec3( xBounds.y - xBounds.x, yBounds.y - yBounds.x, zBounds.y - zBounds.x) + .5);\n'+
-        '}\n' +
+                    'if (last*curr < 0.) {\n'+
+                        'vec3 grad = vec3(0.,0.,0.);\n'+
 
-        'void main() {' +
-            'vec3 ro = cameraPosition;\n'+
-            'vec3 dir = vPosition.xyz - ro;\n'+
-            'float t_entry = length(dir);\n'+
-            'vec3 rd = normalize(dir);\n'+
+                         // Gradient-less coloring?
+                        'if (opacity >= 1.) {\n'+
+                            'gl_FragColor = vec4(ptToColor(pt.xyz), 1.);\n'+
+                            'return;\n'+
+                        '} else {\n'+
+                            'I += vec3(1.,1.,1.)*(pt.xyz/2.+.5);\n'+
+                            'intersects++;\n'+
+                        '}\n'+
 
-            'if (t_entry < 0.) { gl_FragColor = vec4(0.,0.,0.,1.); return; }\n'+
-
-            'vec3 pt = ro+rd*t_entry;\n'+
-
-            'vec3 rskip = normalize(rd)*stepsize;\n'+
-
-            'vec3 I = vec3(0.,0.,0.);\n'+
-            'int intersects = 0;\n'+
-
-            'float last = 0.0;'+
-            'vec3 tols = vec3((xBounds.y - xBounds.x)*.01, (yBounds.y - yBounds.x)*.01, (zBounds.y - zBounds.x)*.01);\n'+
-            'for (int i = 0; i < 1000; i++) {\n'+
-                // outside roi case.
-                'if (pt.z < zBounds.x-tols.z || pt.z > zBounds.y+tols.z || pt.x < xBounds.x-tols.x || pt.x > xBounds.y+tols.x || pt.y > yBounds.y+tols.y || pt.y < yBounds.x-tols.y) { break; }\n'+
-                // plot outline
-                'float curr = 0.;\n'+
-                'curr = fn(pt.x, pt.y, pt.z);\n'+
-
-                'if (last*curr < 0.) {\n'+
-                    'vec3 grad = vec3(0.,0.,0.);\n'+
-
-                     // Gradient-less coloring?
-                    'if (opacity >= 1.) {\n'+
-                        'gl_FragColor = vec4(ptToColor(pt.xyz), 1.);\n'+
-                        'return;\n'+
-                    '} else {\n'+
-                        'I += vec3(1.,1.,1.)*(pt.xyz/2.+.5);\n'+
-                        'intersects++;\n'+
                     '}\n'+
-
+                    'last = curr;\n'+
+                    'pt = pt + rskip;\n'+
                 '}\n'+
-                'last = curr;\n'+
-                'pt = pt + rskip;\n'+
-            '}\n'+
 
-            'if ( opacity < 1.) {\n'+
-                'if (I == vec3(0.,0.,0.)) { gl_FragColor = vec4(1.,1.,1.,1.); return; }\n'+
-                'gl_FragColor = vec4((I/float(intersects)),1.);\n'+
-                'return;\n'+
-            '}\n'+
-            'gl_FragColor = vec4(1.,1.,1.,1.);\n'+
+                'if ( opacity < 1.) {\n'+
+                    'if (I == vec3(0.,0.,0.)) { gl_FragColor = vec4(1.,1.,1.,1.); return; }\n'+
+                    'gl_FragColor = vec4((I/float(intersects)),1.);\n'+
+                    'return;\n'+
+                '}\n'+
+                'gl_FragColor = vec4(1.,1.,1.,1.);\n'+
 
-        '}';
-    return fShader;
+            '}';
+        return fShader;
 
-}
+    }
+};
 
 export default FunctionGrapher;

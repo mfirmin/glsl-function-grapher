@@ -5,14 +5,16 @@ class DragNumber {
         this._value = value;
         this._resolution = resolution;
         this._callback = callback;
-
-        this.initializeElement();
+        this._elementString = `<div id="${this._name}" class="drag-number">${this._value}</div>`;
     }
 
-    initializeElement() {
+    makeDraggable() {
         const scope = this;
 
-        this._element = $(`<div id="${this._name}" class="Drag-number">${this._value}</div>`);
+        if (this.element === undefined) {
+            console.warn(`Element ${this._name} has not been attached to the page yet`);
+            return;
+        }
 
         let dragged   = false;
         let xDown     = null;
@@ -39,14 +41,19 @@ class DragNumber {
             dragged = false;
         }
 
-        this._element.on('mousedown', dragStart);
+        this.element.on('mousedown', dragStart);
         $(document).on('mousemove', dragUpdate);
         $(document).on('mouseup', dragEnd);
     }
 
+    destroy() {
+        this.element.remove();
+        this.callback = null;
+    }
+
     set value(value) {
         this._value = value;
-        this._element.text(this._value);
+        this.element.text(this._value);
     }
 
     get value() {
@@ -54,7 +61,14 @@ class DragNumber {
     }
 
     get element() {
+        if (this._element === undefined) {
+            this._element = $(`#${this._name}`);
+        }
         return this._element;
+    }
+
+    get elementString() {
+        return this._elementString;
     }
 
     set resolution(value) {
@@ -64,7 +78,6 @@ class DragNumber {
     set callback(callback) {
         this._callback = callback;
     }
-
 
 }
 

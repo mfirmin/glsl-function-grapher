@@ -58,7 +58,7 @@
     height: 100%;
 }
 
-.equation {
+.drag-number {
     display: inline; 
     text-decoration: underline; 
     color: red;
