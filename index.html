@@ -45,72 +45,41 @@ title: Michael Firmin
                 fg.setOpacity((this.checked) ? 1 : 0);
             });
 
-            $('#xmin').attr('value', -1);
-            $('#ymin').attr('value', -1);
-            $('#zmin').attr('value', -1);
-            $('#xmax').attr('value', +1);
-            $('#ymax').attr('value', +1);
-            $('#zmax').attr('value', +1);
-
-            $('#xmin').attr('min', -100);
-            $('#ymin').attr('min', -100);
-            $('#zmin').attr('min', -100);
-            $('#xmax').attr('min', -100);
-            $('#ymax').attr('min', -100);
-            $('#zmax').attr('min', -100);
-
-            $('#xmin').attr('max', +100);
-            $('#ymin').attr('max', +100);
-            $('#zmin').attr('max', +100);
-            $('#xmax').attr('max', +100);
-            $('#ymax').attr('max', +100);
-            $('#zmax').attr('max', +100);
-
-            function makeLimVariable(id, def) {
-                var div = $(id);
-                div.mousedown(function(evt) {
-                    evt.preventDefault();
-                    div._dragged = true;
-                    div._mdX = evt.pageX;
-                    div._mdVal = Number(div.attr('value'));
-                });
-
-                $(document).mousemove(function(evt) {
-                    if (div._dragged) {
-                        evt.preventDefault();
-                        var diff = evt.pageX - div._mdX;
-                        div.attr('value', (div._mdVal + diff*(div.attr('max') - div.attr('min'))/1000));
-                        if (div._value > div._max) { div._value = div._max; }
-                        if (div._value < div._min) { div._value = div._min; }
-                        div.html(div.attr('value'));
-                        var updateBounds = {};
-
-                        var which = id[1];
-                        var rest = id.slice(2);
-                        if (rest === 'min') {
-                            updateBounds['x'] = Number(div.attr('value'));
-                        } else {
-                            updateBounds['y'] = Number(div.attr('value'));
-                        }
-                        var setval = {};
-                        setval[which+'Bounds'] = updateBounds;
-                        fg.updateBounds(setval);
-                    }
-                });
-                $(document).mouseup( function(evt) {
-                    evt.preventDefault();
-                    div._dragged = false;
-                });
-
+            function updateLims(which, minmax) {
+                return function(val) {
+                    let setval = {};
+                    let inner  = {};
+                    inner[minmax] = val;
+                    setval[`${which}Bounds`] = inner;
+                    fg.updateBounds(setval);
+                }
             }
 
-            makeLimVariable('#xmin');
-            makeLimVariable('#xmax');
-            makeLimVariable('#ymin');
-            makeLimVariable('#ymax');
-            makeLimVariable('#zmin');
-            makeLimVariable('#zmax');
+            const DN = FunctionGrapher.DragNumber;
 
+            const resolution = 0.1;
+            const min = -10;
+            const max = 10;
+            const xmin = new DN('xmin', -1, updateLims('x', 'x'), { min, max, resolution });
+            const xmax = new DN('xmax', +1, updateLims('x', 'y'), { min, max, resolution });
+            const ymin = new DN('ymin', -1, updateLims('y', 'x'), { min, max, resolution });
+            const ymax = new DN('ymax', +1, updateLims('y', 'y'), { min, max, resolution });
+            const zmin = new DN('zmin', -1, updateLims('z', 'x'), { min, max, resolution });
+            const zmax = new DN('zmax', +1, updateLims('z', 'y'), { min, max, resolution });
+
+            $('#xmin-container')[0].innerHTML = (xmin.elementString);
+            $('#ymin-container')[0].innerHTML = (ymin.elementString);
+            $('#zmin-container')[0].innerHTML = (zmin.elementString);
+            $('#xmax-container')[0].innerHTML = (xmax.elementString);
+            $('#ymax-container')[0].innerHTML = (ymax.elementString);
+            $('#zmax-container')[0].innerHTML = (zmax.elementString);
+
+            xmin.makeDraggable();
+            xmax.makeDraggable();
+            ymin.makeDraggable();
+            ymax.makeDraggable();
+            zmin.makeDraggable();
+            zmax.makeDraggable();
         });
     </script>
     </head>
@@ -119,9 +88,9 @@ title: Michael Firmin
         <div id='controlpanel'>
             <div id='controls'>
                 <input type="checkbox" id="opacity" value="Opaque">Opaque<br>
-                x limits: [<div id="xmin" style="display: inline; text-decoration: underline; color: red;">-1</div>, <div id="xmax" style="display: inline; text-decoration: underline; color: red;">1</div>] <br>
-                y limits: [<div id="ymin" style="display: inline; text-decoration: underline; color: red;">-1</div>, <div id="ymax" style="display: inline; text-decoration: underline; color: red;">1</div>] <br>
-                z limits: [<div id="zmin" style="display: inline; text-decoration: underline; color: red;">-1</div>, <div id="zmax" style="display: inline; text-decoration: underline; color: red;">1</div>] <br>
+                x limits: [<div id="xmin-container" style="display: inline;"></div>, <div id="xmax-container" style="display: inline;"></div>] <br>
+                y limits: [<div id="ymin-container" style="display: inline;"></div>, <div id="ymax-container" style="display: inline;"></div>] <br>
+                z limits: [<div id="zmin-container" style="display: inline;"></div>, <div id="zmax-container" style="display: inline;"></div>] <br>
             </div>
             <div id='fninput'>
 
