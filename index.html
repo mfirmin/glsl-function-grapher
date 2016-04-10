@@ -1,0 +1,115 @@
+---
+title: Michael Firmin
+---
+<!DOCTYPE html>
+<html>
+    <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>GLSL 3D Function Grapher</title>
+
+    <link rel="stylesheet" type="text/css" href="css/functiongrapher.css">
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+    <script type="text/javascript" src="static/lib/three.min.js"></script>
+    <script type="text/javascript" src="static/lib/TrackballControls.js"></script>
+    <script src="static/functiongrapher.js"></script>
+    <script>
+        $(document).ready(function() {
+            var fg = new FunctionGrapher.FunctionGrapher();
+
+            var functions = {
+                'clebsch': '81.0*(x*x*x + y*y*y + z*z*z) - 189.0*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + 54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0',
+                'kiss': 'z*z*z*z - z*z*z*z*z - x*x - y*y',
+                'sin': 'sin(x*y) - z',
+                'plane': '1*x + 0 - z',
+            }
+
+            function update(functionName) {
+                var text;
+                if (functionName !== undefined && functions[functionName] !== undefined) {
+                    text = functions[functionName];
+                    $('textarea#functionbox').val(text);
+                } else {
+                    text = $('textarea#functionbox').val();
+                }
+                fg.updateFunction(text);
+            }
+
+            $('#getFunction').click(() => update());
+            $('#clebsch').click(() => update('clebsch'));
+            $('#kiss').click(() => update('kiss'));
+            $('#sin').click(() => update('sin'));
+            $('#plane').click(() => update('plane'));
+
+            // controls
+            $('#opacity').change(function() {
+                fg.setOpacity((this.checked) ? 1 : 0);
+            });
+
+            function updateLims(which, minmax) {
+                return function(val) {
+                    let setval = {};
+                    let inner  = {};
+                    inner[minmax] = val;
+                    setval[`${which}Bounds`] = inner;
+                    fg.updateBounds(setval);
+                }
+            }
+
+            const DN = FunctionGrapher.DragNumber;
+
+            const resolution = 0.1;
+            const min = -10;
+            const max = 10;
+            const xmin = new DN('xmin', -1, updateLims('x', 'x'), { min, max, resolution });
+            const xmax = new DN('xmax', +1, updateLims('x', 'y'), { min, max, resolution });
+            const ymin = new DN('ymin', -1, updateLims('y', 'x'), { min, max, resolution });
+            const ymax = new DN('ymax', +1, updateLims('y', 'y'), { min, max, resolution });
+            const zmin = new DN('zmin', -1, updateLims('z', 'x'), { min, max, resolution });
+            const zmax = new DN('zmax', +1, updateLims('z', 'y'), { min, max, resolution });
+
+            $('#xmin-container')[0].innerHTML = (xmin.elementString);
+            $('#ymin-container')[0].innerHTML = (ymin.elementString);
+            $('#zmin-container')[0].innerHTML = (zmin.elementString);
+            $('#xmax-container')[0].innerHTML = (xmax.elementString);
+            $('#ymax-container')[0].innerHTML = (ymax.elementString);
+            $('#zmax-container')[0].innerHTML = (zmax.elementString);
+
+            xmin.makeDraggable();
+            xmax.makeDraggable();
+            ymin.makeDraggable();
+            ymax.makeDraggable();
+            zmin.makeDraggable();
+            zmax.makeDraggable();
+        });
+    </script>
+    </head>
+<body>
+    <div id='main'>
+        <div id='controlpanel'>
+            <div id='controls'>
+                <input type="checkbox" id="opacity" value="Opaque">Opaque<br>
+                x limits: [<div id="xmin-container" style="display: inline;"></div>, <div id="xmax-container" style="display: inline;"></div>] <br>
+                y limits: [<div id="ymin-container" style="display: inline;"></div>, <div id="ymax-container" style="display: inline;"></div>] <br>
+                z limits: [<div id="zmin-container" style="display: inline;"></div>, <div id="zmax-container" style="display: inline;"></div>] <br>
+            </div>
+            <div id='fninput'>
+
+
+                Function Input: <br>
+                <textarea rows="5" cols="80" id="functionbox">81.0*(x*x*x + y*y*y + z*z*z) - &#13;&#10;            189.0*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + &#13;&#10;            54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0&#13;&#10;</textarea> <br>
+                <button id='getFunction'>Graph!</button> <br>
+                <p>
+                <button id='clebsch'>Clebsch Diagonal Cubic</button>
+                <button id='kiss'>Kiss Surface</button>
+                <button id='sin'>z=sin(xy)</button>
+                <button id='plane'>Simple Plane</button>
+                </p>
+
+
+            </div>
+        </div>
+        <div id="fndisplay"></div>
+        <div id='grapher'></div>
+    </div>
+</body>
+</html>

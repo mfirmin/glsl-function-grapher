@@ -1,5 +1,4 @@
-
-var Entity = require('./entity');
+import Entity from './entity'
 
 function Box(name, sides, opts) {
 
@@ -34,4 +33,4 @@ Box.prototype.initialize = function() {
 
 }
 
-module.exports = Box;
+export default Box;

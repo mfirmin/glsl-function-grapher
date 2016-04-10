@@ -1,5 +1,4 @@
 
-
 function Entity(name, opts) {
 
     this.name = name;
@@ -77,10 +76,10 @@ Entity.prototype.setRotation = function(q) {
     this.mesh.updateMatrix();
 
     console.log(this.mesh.matrix);
-    
+
 //    this.mesh.rotation.x = Math.PI/4.;
 */
-    
+
 }
 
 Entity.prototype.getPosition = function() {
@@ -90,4 +89,4 @@ Entity.prototype.getRotation = function() {
     return this.rotation;
 }
 
-module.exports = Entity;
+export default Entity;

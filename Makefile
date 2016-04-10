@@ -1,10 +1,20 @@
 
+SOURCEDIR = src
+SOURCES = $(shell find $(SOURCEDIR) -name '*.js')
 
-all: templates/static/bundle.js Makefile
+all: static/functiongrapher.js Makefile
 
 clean: 
-	rm templates/static/bundle.js
+	rm static/functiongrapher.js
 
-templates/static/bundle.js: src/main.js src/world/world.js src/entity/entity.js src/entity/box.js src/entity/capsule.js src/entity/cylinder.js src/entity/sphere.js
-	browserify src/main.js -o templates/static/bundle.js
-	cp templates/static/bundle.js ~/website/mfirmin.github.io/projects/static/functiongrapher.js
+build: static/functiongrapher.js
+	@make static/functiongrapher.js
+
+static/functiongrapher.js:  $(SOURCES)
+	rollup --globals jquery:jQuery -i src/index.js -o static/functiongrapher.js -f iife --name FunctionGrapher
+
+dragNumber: src/dragNumber.js Makefile
+	rollup --globals jquery:jQuery -i src/dragNumber.js -o static/dragNumber.js -f iife --name dragNumber
+
+watch: build
+	watchman-make -p 'src/**/*.js' -t build
