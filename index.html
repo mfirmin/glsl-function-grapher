@@ -14,7 +14,7 @@ title: Michael Firmin
     <script src="static/functiongrapher.js"></script>
     <script>
         $(document).ready(function() {
-            var fg = new FunctionGrapher();
+            var fg = new FunctionGrapher.FunctionGrapher();
 
             var functions = {
                 'clebsch': '81.0*(x*x*x + y*y*y + z*z*z) - 189.0*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + 54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0',
@@ -31,7 +31,7 @@ title: Michael Firmin
                 } else {
                     text = $('textarea#functionbox').val();
                 }
-                fg.updateShader(text);
+                fg.updateFunction(text);
             }
 
             $('#getFunction').click(() => update());

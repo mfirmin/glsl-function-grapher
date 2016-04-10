@@ -3,7 +3,7 @@ import DragNumber from './dragNumber';
 const VARIABLE_REGEX = /-?(?:\d+\.?\d*|\d*\.\d+)/g;
 
 class EquationElement {
-    constructor(id, parent) {
+    constructor(id, parent = 'body') {
         this._id = id;
         this._parent = parent;
         this._variables = [];
@@ -32,13 +32,13 @@ class EquationElement {
         let count = 0;
         while (varStr !== null) {
             const name       = `var${String.fromCharCode(97 + count)}`;
-            const value      = Number(varStr[0]);
-            const dragNumber = new DragNumber(name, value);
+            const value      = varStr[0];
+            const dragNumber = new DragNumber(name, Number(value));
 
             this._eqnHTML += dragNumber.elementString;
             this._eqnGLSL = this._eqnGLSL.replace(value, name);
 
-            this._variables.push({ name, value, dragNumber });
+            this._variables.push({ name, value: Number(value), dragNumber });
 
             last = VARIABLE_REGEX.lastIndex;
             varStr = VARIABLE_REGEX.exec(fn);
@@ -65,6 +65,10 @@ class EquationElement {
             this._variables[i].dragNumber.destroy();
         }
         this._variables.length = 0;
+    }
+
+    set parent(p) {
+        this._parent = p;
     }
 
 }

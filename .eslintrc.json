@@ -3,7 +3,8 @@
     "rules": {
         "indent": ["error", 4],
         "key-spacing": ["error", {"align": "value"}],
-        "no-multi-spaces": ["error", { "exceptions": { "VariableDeclarator": true }}]
+        "no-multi-spaces": ["error", { "exceptions": { "VariableDeclarator": true }}],
+        "no-param-reassign": "off"
     },
     "env": {
         "browser": true,

@@ -445,13 +445,174 @@ var FunctionGrapher = (function () {
         renderLoop();
     }
 
+    class DragNumber {
+        constructor(name, value = 0, callback = null, opts = {}) {
+            this._name = name;
+            this._value = value;
+            this._callback = callback;
+            this._elementString = `<div id="${this._name}" class="drag-number">${this._value}</div>`;
+
+            this._resolution = (opts.resolution === undefined) ? 0.1 : opts.resolution;
+            this._max = (opts.max === undefined) ? null : opts.max;
+            this._min = (opts.min === undefined) ? null : opts.min;
+        }
+
+        makeDraggable() {
+            const scope = this;
+
+            if (this.element === undefined) {
+                console.warn(`Element ${this._name} has not been attached to the page yet`);
+                return;
+            }
+
+            let dragged   = false;
+            let xDown     = null;
+            let valueDown = -1;
+
+            function dragStart(event) {
+                event.preventDefault();
+                dragged = true;
+                xDown = event.pageX;
+                valueDown = scope._value;
+            }
+
+            function dragUpdate(event) {
+                if (dragged) {
+                    const diff = event.pageX - xDown;
+                    scope.value = valueDown + diff * scope._resolution;
+                    if (scope._callback !== null) {
+                        scope._callback(scope._value);
+                    }
+                }
+            }
+
+            function dragEnd() {
+                dragged = false;
+            }
+
+            this.element.on('mousedown', dragStart);
+            $(document).on('mousemove', dragUpdate);
+            $(document).on('mouseup', dragEnd);
+        }
+
+        destroy() {
+            this.element.remove();
+            this.callback = null;
+        }
+
+        set value(value) {
+            let clampedValue = value;
+            if (this._max !== null && clampedValue > this._max) { clampedValue = this._max; }
+            if (this._min !== null && clampedValue < this._min) { clampedValue = this._min; }
+            this._value = clampedValue;
+            this.element.text(this._value);
+        }
+
+        get value() {
+            return this._value;
+        }
+
+        get element() {
+            if (this._element === undefined) {
+                this._element = $(`#${this._name}`);
+            }
+            return this._element;
+        }
+
+        get elementString() {
+            return this._elementString;
+        }
+
+        set resolution(value) {
+            this._resolution = value;
+        }
+
+        set callback(callback) {
+            this._callback = callback;
+        }
+
+    }
+
+    const VARIABLE_REGEX = /-?(?:\d+\.?\d*|\d*\.\d+)/g;
+
+    class EquationElement {
+        constructor(id, parent = 'body') {
+            this._id = id;
+            this._parent = parent;
+            this._variables = [];
+            this._eqnHTML = '';
+            this._eqnGLSL = '';
+        }
+
+        makeEquation(fn) {
+            this.clearVariables();
+
+            this._eqnHTML = '0=';
+            this._eqnGLSL = fn;
+
+            let varStr = VARIABLE_REGEX.exec(fn);
+            let last   = VARIABLE_REGEX.lastIndex;
+
+            let idx;
+            if (varStr === null) {
+                idx = fn.length;
+            } else {
+                idx = varStr.index;
+            }
+
+            this._eqnHTML += fn.substring(0, idx);
+
+            let count = 0;
+            while (varStr !== null) {
+                const name       = `var${String.fromCharCode(97 + count)}`;
+                const value      = varStr[0];
+                const dragNumber = new DragNumber(name, Number(value));
+
+                this._eqnHTML += dragNumber.elementString;
+                this._eqnGLSL = this._eqnGLSL.replace(value, name);
+
+                this._variables.push({ name, value: Number(value), dragNumber });
+
+                last = VARIABLE_REGEX.lastIndex;
+                varStr = VARIABLE_REGEX.exec(fn);
+
+                if (varStr === null) {
+                    idx = fn.length;
+                } else {
+                    idx = varStr.index;
+                }
+                this._eqnHTML += fn.substring(last, idx);
+                count++;
+            }
+
+            $(this._parent)[0].innerHTML = this._eqnHTML;
+            for (let i = 0; i < this._variables.length; i++) {
+                this._variables[i].dragNumber.makeDraggable();
+            }
+
+            return { eqnHTML: this._eqnHTML, eqnGLSL: this._eqnGLSL, variables: this._variables };
+        }
+
+        clearVariables() {
+            for (let i = 0; i < this._variables.length; i++) {
+                this._variables[i].dragNumber.destroy();
+            }
+            this._variables.length = 0;
+        }
+
+        set parent(p) {
+            this._parent = p;
+        }
+
+    }
+
     class FunctionGrapher {
         constructor() {
             this.world = new World('raytracer', { element: '#grapher' });
+            this.equationElement = new EquationElement('function', '#fndisplay');
 
             $('#grapher').append(this.world.panel);
             this.world.setSize();
-
 
             this.variables = {};
 
@@ -500,51 +661,60 @@ var FunctionGrapher = (function () {
 
             this.world.addEntity(this.box);
 
-
             this.world.go();
 
             $(window).resize(() => this.world.setSize());
         }
 
-        findVariables(fn) {
+        updateFunction(fn) {
+            const eqnInfo     = this.equationElement.makeEquation(fn);
+            const variables   = eqnInfo.variables;
+            let extraUniforms = '';
 
-            this.uniforms[name] = {type: 'f', value: varPart[0]};
-            extraUniforms += 'uniform float ' + name + ';\n';
-
-        }
-
-
-        updateShader(fn) {
-            var ret = this.findVariables(fn);
-            var fragShader = this.makeFragmentShader(ret.retFn, ret.extraUniforms);
+            for (let i = 0; i < variables.length; i++) {
+                const name  = variables[i].name;
+                const value = variables[i].value;
+                const dn    = variables[i].dragNumber;
+                this.uniforms[name] = { type: 'f', value };
+                dn.callback = (val) => { this.uniforms[name].value = val; };
+                extraUniforms += `uniform float ${name};\n`;
+            }
+            const fragShader = this.makeFragmentShader(eqnInfo.eqnGLSL, extraUniforms);
             this.box.opts.material.fragmentShader = fragShader;
             this.box.opts.material.needsUpdate = true;
         }
 
         setOpacity(val) {
-            this.uniforms['opacity'].value = val;
+            this.uniforms.opacity.value = val;
         }
 
         updateBounds(val) {
             this.world.removeEntity(this.box);
 
-            for (var entry in val) {
-                for (var coord in val[entry]) {
-                    this.uniforms[entry].value[coord] = Number(val[entry][coord]);
+            for (const entry in val) {
+                if ({}.hasOwnProperty.call(val, entry)) {
+                    for (const coord in val[entry]) {
+                        if ({}.hasOwnProperty.call(val[entry], coord)) {
+                            this.uniforms[entry].value[coord] = Number(val[entry][coord]);
+                        }
+                    }
                 }
             }
-            var x = this.uniforms['xBounds'].value;
-            var y = this.uniforms['yBounds'].value;
-            var z = this.uniforms['zBounds'].value;
-            var boxnew = new Box('plot', [x.y - x.x, y.y - y.x, z.y - z.x], {material: this.material});
+            const x = this.uniforms.xBounds.value;
+            const y = this.uniforms.yBounds.value;
+            const z = this.uniforms.zBounds.value;
+            const boxnew = new Box('plot',
+                                   [x.y - x.x, y.y - y.x, z.y - z.x],
+                                   { material: this.material }
+            );
 
-            var step = (Math.max(Math.max(x.y - x.x, y.y - y.x), z.y - z.x))/100;
-            this.uniforms['stepsize'].value = step;
+            const step = (Math.max(Math.max(x.y - x.x, y.y - y.x), z.y - z.x)) / 100.0;
+            this.uniforms.stepsize.value = step;
 
 
-            boxnew.mesh.position.x = (x.x + x.y)/2.
-            boxnew.mesh.position.y = (y.x + y.y)/2.
-            boxnew.mesh.position.z = (z.x + z.y)/2.
+            boxnew.mesh.position.x = (x.x + x.y) / 2.0;
+            boxnew.mesh.position.y = (y.x + y.y) / 2.0;
+            boxnew.mesh.position.z = (z.x + z.y) / 2.0;
 
 
             boxnew.mesh.updateMatrix();
@@ -555,233 +725,81 @@ var FunctionGrapher = (function () {
         }
 
         makeFragmentShader(fn, extraUniforms) {
-
+            /* eslint indent: "off", max-len: "off" */
             extraUniforms = (extraUniforms === undefined) ? '' : extraUniforms;
 
-            var fShader = '' +
-                'varying vec4 vPosition;\n'+
-                'uniform vec3 lightsource;\n'+
-                'uniform float stepsize;\n'+
-                'uniform float opacity;\n'+
-                'uniform float surface;\n'+
-                'uniform vec2 xBounds;\n'+
-                'uniform vec2 yBounds;\n'+
-                'uniform vec2 zBounds;\n'+
-                extraUniforms +
+            const fShader = [
+                'varying vec4 vPosition;',
+                'uniform vec3 lightsource;',
+                'uniform float stepsize;',
+                'uniform float opacity;',
+                'uniform float surface;',
+                'uniform vec2 xBounds;',
+                'uniform vec2 yBounds;',
+                'uniform vec2 zBounds;',
+                extraUniforms,
                 // Describe ROI as a sphere later?
 
-                'float fn(float x, float y, float z) {\n' +
-                    'return ' +
-                    fn + ';\n' +
-                '}\n'+
+                'float fn(float x, float y, float z) {',
+                    `return ${fn};`,
+                '}',
 
-                'vec3 ptToColor(vec3 pt) {\n'+
-                    'return vec3(1.,1.,1.)*(pt.xyz/vec3( xBounds.y - xBounds.x, yBounds.y - yBounds.x, zBounds.y - zBounds.x) + .5);\n'+
-                '}\n' +
+                'vec3 ptToColor(vec3 pt) {',
+                    'return vec3(1.,1.,1.)*(pt.xyz/vec3( xBounds.y - xBounds.x, yBounds.y - yBounds.x, zBounds.y - zBounds.x) + .5);',
+                '}',
 
-                'void main() {' +
-                    'vec3 ro = cameraPosition;\n'+
-                    'vec3 dir = vPosition.xyz - ro;\n'+
-                    'float t_entry = length(dir);\n'+
-                    'vec3 rd = normalize(dir);\n'+
+                'void main() {',
+                    'vec3 ro = cameraPosition;',
+                    'vec3 dir = vPosition.xyz - ro;',
+                    'float t_entry = length(dir);',
+                    'vec3 rd = normalize(dir);',
 
-                    'if (t_entry < 0.) { gl_FragColor = vec4(0.,0.,0.,1.); return; }\n'+
+                    'if (t_entry < 0.) { gl_FragColor = vec4(0.,0.,0.,1.); return; }',
 
-                    'vec3 pt = ro+rd*t_entry;\n'+
+                    'vec3 pt = ro+rd*t_entry;',
 
-                    'vec3 rskip = normalize(rd)*stepsize;\n'+
+                    'vec3 rskip = normalize(rd)*stepsize;',
 
-                    'vec3 I = vec3(0.,0.,0.);\n'+
-                    'int intersects = 0;\n'+
+                    'vec3 I = vec3(0.,0.,0.);',
+                    'int intersects = 0;',
 
-                    'float last = 0.0;'+
-                    'vec3 tols = vec3((xBounds.y - xBounds.x)*.01, (yBounds.y - yBounds.x)*.01, (zBounds.y - zBounds.x)*.01);\n'+
-                    'for (int i = 0; i < 1000; i++) {\n'+
+                    'float last = 0.0;',
+                    'vec3 tols = vec3((xBounds.y - xBounds.x)*.01, (yBounds.y - yBounds.x)*.01, (zBounds.y - zBounds.x)*.01);',
+                    'for (int i = 0; i < 1000; i++) {',
                         // outside roi case.
-                        'if (pt.z < zBounds.x-tols.z || pt.z > zBounds.y+tols.z || pt.x < xBounds.x-tols.x || pt.x > xBounds.y+tols.x || pt.y > yBounds.y+tols.y || pt.y < yBounds.x-tols.y) { break; }\n'+
+                        'if (pt.z < zBounds.x-tols.z || pt.z > zBounds.y+tols.z || pt.x < xBounds.x-tols.x || pt.x > xBounds.y+tols.x || pt.y > yBounds.y+tols.y || pt.y < yBounds.x-tols.y) { break; }',
                         // plot outline
-                        'float curr = 0.;\n'+
-                        'curr = fn(pt.x, pt.y, pt.z);\n'+
+                        'float curr = 0.;',
+                        'curr = fn(pt.x, pt.y, pt.z);',
 
-                        'if (last*curr < 0.) {\n'+
-                            'vec3 grad = vec3(0.,0.,0.);\n'+
+                        'if (last*curr < 0.) {',
+                            'vec3 grad = vec3(0.,0.,0.);',
 
                              // Gradient-less coloring?
-                            'if (opacity >= 1.) {\n'+
-                                'gl_FragColor = vec4(ptToColor(pt.xyz), 1.);\n'+
-                                'return;\n'+
-                            '} else {\n'+
-                                'I += vec3(1.,1.,1.)*(pt.xyz/2.+.5);\n'+
-                                'intersects++;\n'+
-                            '}\n'+
+                            'if (opacity >= 1.) {',
+                                'gl_FragColor = vec4(ptToColor(pt.xyz), 1.);',
+                                'return;',
+                            '} else {',
+                                'I += vec3(1.,1.,1.)*(pt.xyz/2.+.5);',
+                                'intersects++;',
+                            '}',
 
-                        '}\n'+
-                        'last = curr;\n'+
-                        'pt = pt + rskip;\n'+
-                    '}\n'+
+                        '}',
+                        'last = curr;',
+                        'pt = pt + rskip;',
+                    '}',
 
-                    'if ( opacity < 1.) {\n'+
-                        'if (I == vec3(0.,0.,0.)) { gl_FragColor = vec4(1.,1.,1.,1.); return; }\n'+
-                        'gl_FragColor = vec4((I/float(intersects)),1.);\n'+
-                        'return;\n'+
-                    '}\n'+
-                    'gl_FragColor = vec4(1.,1.,1.,1.);\n'+
+                    'if ( opacity < 1.) {',
+                        'if (I == vec3(0.,0.,0.)) { gl_FragColor = vec4(1.,1.,1.,1.); return; }',
+                        'gl_FragColor = vec4((I/float(intersects)),1.);',
+                        'return;',
+                    '}',
+                    'gl_FragColor = vec4(1.,1.,1.,1.);',
 
-                '}';
+                '}'].join('\n');
+
             return fShader;
-
         }
-    };
-
-    class DragNumber {
-        constructor(name, value = 0, resolution = 1, callback = null) {
-            this._name = name;
-            this._value = value;
-            this._resolution = resolution;
-            this._callback = callback;
-            this._elementString = `<div id="${this._name}" class="drag-number">${this._value}</div>`;
-        }
-
-        makeDraggable() {
-            const scope = this;
-
-            if (this.element === undefined) {
-                console.warn(`Element ${this._name} has not been attached to the page yet`);
-                return;
-            }
-
-            let dragged   = false;
-            let xDown     = null;
-            let valueDown = -1;
-
-            function dragStart(event) {
-                event.preventDefault();
-                dragged = true;
-                xDown = event.pageX;
-                valueDown = scope._value;
-            }
-
-            function dragUpdate(event) {
-                if (dragged) {
-                    const diff = event.pageX - xDown;
-                    scope.value = valueDown + diff * scope._resolution;
-                    if (scope._callback !== null) {
-                        scope._callback(scope._value);
-                    }
-                }
-            }
-
-            function dragEnd() {
-                dragged = false;
-            }
-
-            this.element.on('mousedown', dragStart);
-            $(document).on('mousemove', dragUpdate);
-            $(document).on('mouseup', dragEnd);
-        }
-
-        destroy() {
-            this.element.remove();
-            this.callback = null;
-        }
-
-        set value(value) {
-            this._value = value;
-            this.element.text(this._value);
-        }
-
-        get value() {
-            return this._value;
-        }
-
-        get element() {
-            if (this._element === undefined) {
-                this._element = $(`#${this._name}`);
-            }
-            return this._element;
-        }
-
-        get elementString() {
-            return this._elementString;
-        }
-
-        set resolution(value) {
-            this._resolution = value;
-        }
-
-        set callback(callback) {
-            this._callback = callback;
-        }
-
-    }
-
-    const VARIABLE_REGEX = /-?(?:\d+\.?\d*|\d*\.\d+)/g;
-
-    class EquationElement {
-        constructor(id, parent) {
-            this._id = id;
-            this._parent = parent;
-            this._variables = [];
-            this._eqnHTML = '';
-            this._eqnGLSL = '';
-        }
-
-        makeEquation(fn) {
-            this.clearVariables();
-
-            this._eqnHTML = '0=';
-            this._eqnGLSL = fn;
-
-            let varStr = VARIABLE_REGEX.exec(fn);
-            let last   = VARIABLE_REGEX.lastIndex;
-
-            let idx;
-            if (varStr === null) {
-                idx = fn.length;
-            } else {
-                idx = varStr.index;
-            }
-
-            this._eqnHTML += fn.substring(0, idx);
-
-            let count = 0;
-            while (varStr !== null) {
-                const name       = `var${String.fromCharCode(97 + count)}`;
-                const value      = Number(varStr[0]);
-                const dragNumber = new DragNumber(name, value);
-
-                this._eqnHTML += dragNumber.elementString;
-                this._eqnGLSL = this._eqnGLSL.replace(value, name);
-
-                this._variables.push({ name, value, dragNumber });
-
-                last = VARIABLE_REGEX.lastIndex;
-                varStr = VARIABLE_REGEX.exec(fn);
-
-                if (varStr === null) {
-                    idx = fn.length;
-                } else {
-                    idx = varStr.index;
-                }
-                this._eqnHTML += fn.substring(last, idx);
-                count++;
-            }
-
-            $(this._parent)[0].innerHTML = this._eqnHTML;
-            for (let i = 0; i < this._variables.length; i++) {
-                this._variables[i].dragNumber.makeDraggable();
-            }
-
-            return { eqnHTML: this._eqnHTML, eqnGLSL: this._eqnGLSL, variables: this._variables };
-        }
-
-        clearVariables() {
-            for (let i = 0; i < this._variables.length; i++) {
-                this._variables[i].dragNumber.destroy();
-            }
-            this._variables.length = 0;
-        }
-
     }
 
     const FG = { FunctionGrapher, DragNumber, EquationElement };

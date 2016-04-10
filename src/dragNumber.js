@@ -1,11 +1,14 @@
 
 class DragNumber {
-    constructor(name, value = 0, resolution = 1, callback = null) {
+    constructor(name, value = 0, callback = null, opts = {}) {
         this._name = name;
         this._value = value;
-        this._resolution = resolution;
         this._callback = callback;
         this._elementString = `<div id="${this._name}" class="drag-number">${this._value}</div>`;
+
+        this._resolution = (opts.resolution === undefined) ? 0.1 : opts.resolution;
+        this._max = (opts.max === undefined) ? null : opts.max;
+        this._min = (opts.min === undefined) ? null : opts.min;
     }
 
     makeDraggable() {
@@ -52,7 +55,10 @@ class DragNumber {
     }
 
     set value(value) {
-        this._value = value;
+        let clampedValue = value;
+        if (this._max !== null && clampedValue > this._max) { clampedValue = this._max; }
+        if (this._min !== null && clampedValue < this._min) { clampedValue = this._min; }
+        this._value = clampedValue;
         this.element.text(this._value);
     }
 
