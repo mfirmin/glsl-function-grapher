@@ -1,0 +1,27 @@
+---
+title: Michael Firmin
+---
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <title>TEST</title>
+
+        <script type="text/javascript" src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+        <script src="static/dragNumber.js"></script>
+        <script>
+            let dn1 = null;
+            let dnRes = null;
+            $('document').ready(() => {
+                dn1 = new dragNumber('test', 5, 1);
+                dnRes = new dragNumber('resolution', 1, 0.1, (val) => {
+                    dn1.resolution = val;
+                });
+                $('body').append(dn1.element);
+                $('body').append(dnRes.element);
+            });
+        </script>
+    </head>
+    <body>
+    </body>
+</html>
