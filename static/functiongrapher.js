@@ -691,9 +691,9 @@ var FunctionGrapher = (function () {
         updateBounds(val) {
             this.world.removeEntity(this.box);
 
-            for (const entry in val) {
+            for (var entry in val) {
                 if ({}.hasOwnProperty.call(val, entry)) {
-                    for (const coord in val[entry]) {
+                    for (var coord in val[entry]) {
                         if ({}.hasOwnProperty.call(val[entry], coord)) {
                             this.uniforms[entry].value[coord] = Number(val[entry][coord]);
                         }
