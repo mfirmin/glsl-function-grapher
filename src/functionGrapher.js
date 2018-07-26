@@ -1,12 +1,10 @@
 /* global THREE */
 import World from './world/world';
 import Box from './entity/box';
-import EquationElement from './equationElement';
 
 class FunctionGrapher {
     constructor() {
         this.world = new World('raytracer', { element: '#grapher' });
-        this.equationElement = new EquationElement('function', '#fndisplay');
 
         $('#grapher').append(this.world.panel);
         this.world.setSize();
@@ -64,7 +62,8 @@ class FunctionGrapher {
     }
 
     updateFunction(fn) {
-        const eqnInfo     = this.equationElement.makeEquation(fn);
+        // TODO: Hook into external equation
+        return;
         const variables   = eqnInfo.variables;
         let extraUniforms = '';
 
