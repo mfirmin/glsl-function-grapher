@@ -10,6 +10,17 @@ export const eqnEdit = {
         };
     },
     template: `
-        <div :style="styleObject" v-html="equationhtml"></div>
+        <div :style="styleObject">
+            <span v-for="node in equationhtml">
+                <drag-number v-if="node.type === 'coefficient'" :initialvalue="node.value" :key="node.id" @value-changed="valueChanged"></drag-number>
+                <span v-else-if="node.type === 'static'">{{ node.value }}</span>
+                <span v-else-if="node.type === 'error'" class="error">{{ node.value }}</span>
+            </span>
+        </div>
     `,
+    methods: {
+        valueChanged(val) {
+            this.$emit('coefficient-changed', val);
+        },
+    },
 };

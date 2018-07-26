@@ -29,7 +29,7 @@ title: Michael Firmin
       </div>
     </div>
     <main-graph v-if="state === 'graphing'" :style="graphStyle"></main-graph>
-    <eqn-edit v-if="state === 'graphing'" :style="editStyle" :equationhtml="equationHtml"></eqn-edit>
+    <eqn-edit v-if="state === 'graphing'" :style="editStyle" :equationhtml="equationHtml" @coefficient-changed="updateCoefficient"></eqn-edit>
     <!--
     <controls></controls>
     -->
@@ -137,6 +137,7 @@ title: Michael Firmin
     Vue.component('eqn-input', FG.components.eqnInput);
     Vue.component('eqn-edit', FG.components.eqnEdit);
     Vue.component('main-graph', FG.components.mainGraph);
+    Vue.component('drag-number', FG.components.dragNumber);
 
     // Mapping of method name to glsl equivalent
     const validFunctions = {
@@ -238,21 +239,59 @@ title: Michael Firmin
       },
     };
 
-    function toHtml(node) {
+    nodeId = 0;
+
+    function pushStatic(value, output) {
+      const ol = output.length;
+      if (ol === 0 || output[ol - 1].type === 'coefficient') {
+        output.push({
+          type: 'static',
+          value,
+        });
+      } else if (output[ol - 1].type === 'static') {
+        output[ol - 1].value += value;
+      }
+    }
+
+    function toHtml(node, output) {
       if (FG.math.type.isConstantNode(node)) {
-        return `<span class="constant">${node.value}</span>`;
+        output.push({
+          type: 'coefficient',
+          value: node.value,
+          id: nodeId++,
+        });
       } else if (FG.math.type.isSymbolNode(node)) {
         const val = node.name.toLowerCase();
         if ((val === 'x' || val === 'y' || val === 'z') ||
             (FG.math[val] !== undefined && typeof FG.math[val] === 'number')) {
-          return `${val}`;
+          pushStatic(val, output);
+        } else {
+          throw new Error(`Unknown variable ${node.name}`);
         }
-        throw new Error(`Unknown variable ${node.name}`);
       } else if (FG.math.type.isParenthesisNode(node)) {
-        return `(${node.content})`;
+        pushStatic('(', output);
+        toHtml(node.content, output);
+        pushStatic(')', output);
       } else if (FG.math.type.isOperatorNode(node)) {
         const { args, fn, op } = node;
-        return `${toHtml(args[0])} ${op} ${toHtml(args[1])}`;
+        if (args.length === 2) {
+          toHtml(args[0], output) ;
+          pushStatic(` ${op} `, output);
+          toHtml(args[1], output);
+        } else if (args.length === 1 && (fn === 'unaryMinus' || fn === 'unaryPlus')) {
+          if (FG.math.type.isConstantNode(args[0])) {
+            output.push({
+              type: 'coefficient',
+              value: Number(`${op}${args[0].value}`),
+              id: nodeId++,
+            });
+          } else {
+            pushStatic(` ${op}`, output);
+            toHtml(args[0], output);
+          }
+        } else {
+          throw new Error(`Unknown/unsupported operator ${fn}`);
+        }
       } else if (FG.math.type.isFunctionNode(node)) {
         const fn = node.fn.name;
         if (validFunctions[fn] === undefined) {
@@ -261,10 +300,14 @@ title: Michael Firmin
         if (validFunctions[fn].numArgs !== node.args.length) {
           throw new Error(`Function "${fn}" expects ${validFunctions[fn].numArgs} arguments. Got ${node.args.length} instead.`);
         }
-        return `${fn}(${node.args.map(n => toHtml(n))})`;
+        pushStatic(`${fn}(`, output);
+        for (param of node.args) {
+          toHtml(param, output);
+        }
+        pushStatic(')', output);
       } else {
-        console.log('UNKNOWN NODE TYPE!');
-        console.log(node);
+        console.warn('UNKNOWN NODE TYPE!');
+        console.warn(node);
 
         throw new Error(`Bad syntax or unsupported functionality`);
       }
@@ -319,18 +362,23 @@ title: Michael Firmin
           this.$refs.input.equation = equation;
           this.$refs.input.graph();
         },
+        updateCoefficient: function(val) {
+          // TODO: Update GLSL uniforms
+        }
       },
       computed: {
         equationHtml: function() {
-          let html;
+          const output = [];
           try {
             const node = FG.math.parse(this.equation);
-            console.log(node);
-            html = toHtml(node);
+            toHtml(node, output);
+            return output;
           } catch (e) {
-            html = `<h1 class="error">${e}</h1>`;
+            return [{
+              type: 'error',
+              value: `Error: ${e.message}`,
+            }];
           }
-          return `<h3>${html}</h3>`;
         },
       },
     });

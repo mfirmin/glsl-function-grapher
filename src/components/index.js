@@ -1,9 +1,11 @@
-import { eqnInput } from './eqn-input.js';
-import { mainGraph } from './main.js';
-import { eqnEdit } from './eqn-edit.js';
+import { eqnInput } from './eqn-input';
+import { mainGraph } from './main';
+import { eqnEdit } from './eqn-edit';
+import { dragNumber } from './drag-number';
 
 export const components = {
     eqnEdit,
     eqnInput,
+    dragNumber,
     mainGraph,
 };
