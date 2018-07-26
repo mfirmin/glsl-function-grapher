@@ -6,6 +6,7 @@
     color: red;
 }
 
-input[type=number] {
-    width: 40px;
-} 
+.drag-number {
+    text-decoration: underline; 
+    color: #00eea0;
+}
