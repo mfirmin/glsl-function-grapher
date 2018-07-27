@@ -8,7 +8,6 @@ title: Michael Firmin
     <title>GLSL 3D Function Grapher</title>
 
     <link rel="stylesheet" type="text/css" href="css/functiongrapher.css">
-    <script type="text/javascript" src="//code.jquery.com/jquery-1.12.0.min.js"></script>
     <script type="text/javascript" src="static/lib/three.min.js"></script>
     <script type="text/javascript" src="static/lib/TrackballControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
@@ -28,7 +27,7 @@ title: Michael Firmin
         <button @click="example('sin')">z=sin(x,y)</button>
       </div>
     </div>
-    <main-graph v-if="state === 'graphing'" :style="graphStyle"></main-graph>
+    <main-graph ref="main" v-if="state === 'graphing'" :style="graphStyle"></main-graph>
     <eqn-edit v-if="state === 'graphing'" :style="editStyle" :equationhtml="equationHtml" @coefficient-changed="updateCoefficient"></eqn-edit>
     <!--
     <controls></controls>

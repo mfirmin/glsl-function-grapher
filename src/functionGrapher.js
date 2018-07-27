@@ -1,13 +1,10 @@
-/* global THREE */
-import World from './world/world';
-import Box from './entity/box';
+import { Renderer } from './renderer';
 
-class FunctionGrapher {
-    constructor() {
-        this.world = new World('raytracer', { element: '#grapher' });
+export class FunctionGrapher {
+    constructor(element) {
+        this.renderer = new Renderer(element);
 
-        $('#grapher').append(this.world.panel);
-        this.world.setSize();
+        this.renderer.setSize();
 
         this.variables = {};
 
@@ -52,13 +49,11 @@ class FunctionGrapher {
 
         this.customVarIDs = [];
 
-        this.box = new Box('plot', [2, 2, 2], { material: this.material });
+//        this.box = new Box('plot', [2, 2, 2], { material: this.material });
 
-        this.world.addEntity(this.box);
+ //       this.renderer.addEntity(this.box);
 
-        this.world.go();
-
-        $(window).resize(() => this.world.setSize());
+        this.renderer.go();
     }
 
     updateFunction(fn) {
@@ -85,7 +80,8 @@ class FunctionGrapher {
     }
 
     updateBounds(val) {
-        this.world.removeEntity(this.box);
+        return;
+        this.renderer.removeEntity(this.box);
 
         for (const entry in val) {
             if ({}.hasOwnProperty.call(val, entry)) {
@@ -115,7 +111,7 @@ class FunctionGrapher {
 
         boxnew.mesh.updateMatrix();
 
-        this.world.addEntity(boxnew);
+        this.renderer.addEntity(boxnew);
 
         this.box = boxnew;
     }
@@ -196,6 +192,12 @@ class FunctionGrapher {
 
         return fShader;
     }
-}
 
-export default FunctionGrapher;
+    go() {
+        this.renderer.go();
+    }
+
+    get domElement() {
+        return this.renderer.renderer.domElement;
+    }
+}
