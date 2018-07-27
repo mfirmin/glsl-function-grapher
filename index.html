@@ -16,7 +16,7 @@ title: Michael Firmin
     <div id="intro" :style="inputStyle">
       <h1 v-if="state === 'initial'" style="text-align: center;">3D Function Grapher!</h1><br>
       Enter an equation:<br>
-      <eqn-input ref="input" @graph="updateState"></eqn-input>
+      <eqn-input ref="input" @graph="updateEquation"></eqn-input>
       <div id="examples" v-if="state === 'initial'">
         Or try an example function:
         <button @click="example('clebsch')">Clebsch Diagonal Cubic</button>
@@ -238,30 +238,40 @@ title: Michael Firmin
 
     nodeId = 0;
 
-    function pushStatic(value, output) {
+    function pushStatic(value, output, glsl = null) {
+      if (glsl === null) {
+        glsl = value;
+      }
       const ol = output.length;
       if (ol === 0 || output[ol - 1].type === 'coefficient') {
         output.push({
           type: 'static',
           value,
+          glsl,
         });
       } else if (output[ol - 1].type === 'static') {
         output[ol - 1].value += value;
+        output[ol - 1].glsl += glsl;
       }
+    }
+
+    function pushCoefficient(value, output) {
+        output.push({
+          type: 'coefficient',
+          value: value,
+          id: nodeId++,
+        });
     }
 
     function toHtml(node, output) {
       if (FG.math.type.isConstantNode(node)) {
-        output.push({
-          type: 'coefficient',
-          value: node.value,
-          id: nodeId++,
-        });
+        pushCoefficient(node.value, output);
       } else if (FG.math.type.isSymbolNode(node)) {
         const val = node.name.toLowerCase();
-        if ((val === 'x' || val === 'y' || val === 'z') ||
-            (FG.math[val] !== undefined && typeof FG.math[val] === 'number')) {
+        if (val === 'x' || val === 'y' || val === 'z') {
           pushStatic(val, output);
+        } else if (FG.math[val] !== undefined && typeof FG.math[val] === 'number') {
+          pushStatic(val, output, FG.math[val]);
         } else {
           throw new Error(`Unknown variable ${node.name}`);
         }
@@ -277,11 +287,8 @@ title: Michael Firmin
           toHtml(args[1], output);
         } else if (args.length === 1 && (fn === 'unaryMinus' || fn === 'unaryPlus')) {
           if (FG.math.type.isConstantNode(args[0])) {
-            output.push({
-              type: 'coefficient',
-              value: Number(`${op}${args[0].value}`),
-              id: nodeId++,
-            });
+            const value = Number(`${op}${args[0].value}`);
+            pushCoefficient(value, output);
           } else {
             pushStatic(` ${op}`, output);
             toHtml(args[0], output);
@@ -297,7 +304,7 @@ title: Michael Firmin
         if (validFunctions[fn].numArgs !== node.args.length) {
           throw new Error(`Function "${fn}" expects ${validFunctions[fn].numArgs} arguments. Got ${node.args.length} instead.`);
         }
-        pushStatic(`${fn}(`, output);
+        pushStatic(`${fn}(`, output, `${validFunctions[fn].glsl}(`);
         for (param of node.args) {
           toHtml(param, output);
         }
@@ -331,8 +338,10 @@ title: Michael Firmin
         },
       },
       methods: {
-        updateState: function(event) {
-          this.state = 'graphing';
+        updateEquation: function(event) {
+          if (this.state !== 'graphing') {
+            this.state = 'graphing';
+          }
           this.equation = event.newEquation;
           this.inputStyle.top = '50px';
         },
@@ -360,7 +369,7 @@ title: Michael Firmin
           this.$refs.input.graph();
         },
         updateCoefficient: function(val) {
-          // TODO: Update GLSL uniforms
+          this.$refs.main.updateCoefficient(val.key, val.value);
         }
       },
       computed: {
@@ -369,6 +378,9 @@ title: Michael Firmin
           try {
             const node = FG.math.parse(this.equation);
             toHtml(node, output);
+            this.$nextTick(() => {
+              this.$refs.main.setEquation(output);
+            });
             return output;
           } catch (e) {
             return [{

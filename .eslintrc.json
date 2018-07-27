@@ -4,6 +4,7 @@
         "indent": ["error", 4],
         "no-multi-spaces": ["error", { "exceptions": { "VariableDeclarator": true }}],
         "no-param-reassign": "off",
+        "no-restricted-syntax": "off",
         "import/prefer-default-export": "off"
     },
     "env": {

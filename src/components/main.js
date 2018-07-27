@@ -1,7 +1,7 @@
 import { FunctionGrapher } from '../functionGrapher';
 
 export const mainGraph = {
-    data: function () {
+    data() {
         return {
             fg: null,
             outerStyle: {
@@ -16,7 +16,7 @@ export const mainGraph = {
             },
         };
     },
-    mounted: function() {
+    mounted() {
         this.fg = new FunctionGrapher(this.$refs.container);
         this.fg.go();
     },
@@ -25,5 +25,23 @@ export const mainGraph = {
             <div ref="container" :style="innerStyle"></div>
         </div>
     `,
-};
+    methods: {
+        setEquation(eqn) {
+            const uniforms = {};
+            let glsl = '';
+            for (const node of eqn) {
+                if (node.type === 'coefficient') {
+                    uniforms[`var${node.id}`] = { value: node.value, type: 'f' };
+                    glsl += ` var${node.id} `;
+                } else if (node.type === 'static') {
+                    glsl += node.glsl;
+                }
+            }
 
+            this.fg.setEquation(glsl, uniforms);
+        },
+        updateCoefficient(id, value) {
+            this.fg.updateCoefficient(id, value);
+        },
+    },
+};

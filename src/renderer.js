@@ -6,7 +6,8 @@ import {
     Scene,
     WebGLRenderer,
 } from './lib/three.module';
-import { OrbitControls } from './lib/OrbitControls';
+// import { OrbitControls } from './lib/OrbitControls';
+import { TrackballControls } from './lib/TrackballControls';
 
 export class Renderer {
     constructor(element) {
@@ -42,9 +43,11 @@ export class Renderer {
 
         this.camera.position.z = 5;
 
-        const controls = new OrbitControls(this.camera, this.element);
+        const controls = new TrackballControls(this.camera, this.element);
 
-        controls.rotateSpeed = 2.0;
+        // Use for orbit controls
+//        controls.rotateSpeed = 2.0;
+        controls.rotateSpeed = 5.0;
         controls.zoomSpeed = 1.2;
 
         controls.noZoom = false;
@@ -61,6 +64,9 @@ export class Renderer {
         this.setSize(w, h);
     }
 
+    setMaterial(m) {
+        this.box.material = m;
+    }
 
     setSize(w, h) {
         this.renderer.setSize(w, h);
