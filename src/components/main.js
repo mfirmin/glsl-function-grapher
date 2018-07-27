@@ -4,19 +4,26 @@ export const mainGraph = {
     data: function () {
         return {
             fg: null,
-            styleObject: {
+            outerStyle: {
                 border: '1px solid black',
                 width: '50vw',
                 height: '75vh',
             },
+            innerStyle: {
+                margin: '5px 5px 5px 5px',
+                width: 'calc(100% - 10px)',
+                height: 'calc(100% - 10px)',
+            },
         };
     },
     mounted: function() {
-        this.fg = new FunctionGrapher(this.$refs.canvas);
+        this.fg = new FunctionGrapher(this.$refs.container);
         this.fg.go();
     },
     template: `
-        <canvas ref="canvas" :style="styleObject"></canvas>
+        <div :style="outerStyle">
+            <div ref="container" :style="innerStyle"></div>
+        </div>
     `,
 };
 

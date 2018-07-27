@@ -1,41 +1,50 @@
+import {
+    BoxBufferGeometry,
+    Mesh,
+    MeshBasicMaterial,
+    PerspectiveCamera,
+    Scene,
+    WebGLRenderer,
+} from './lib/three.module';
+import { OrbitControls } from './lib/OrbitControls';
+
 export class Renderer {
     constructor(element) {
         this.element = element;
         this.initializeGL();
         this.initializeScene();
 
-        this.renderReady = false;
+        window.addEventListener('resize', () => {
+            this.setSize(this.element.offsetWidth, this.element.offsetHeight);
+        });
     }
 
     initializeGL() {
         try {
-            this.renderer = new THREE.WebGLRenderer({
+            this.renderer = new WebGLRenderer({
                 preserveDrawingBuffer: true,
-                canvas: this.element,
             });
-        } catch(e) {
+        } catch (e) {
             throw new Error('Could not initialize WebGL');
         }
         this.renderer.setClearColor(0xffffff, 1);
+
+        this.element.append(this.renderer.domElement);
     }
 
     initializeScene() {
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(45, 400/400, 1, 1000);
-        this.scene.add(this.camera);
-        this.light = new THREE.PointLight( 0xfffffa, 1, 0 );
-        this.light.position.set( 1, 20, -20 );
-        this.scene.add( this.light );
+        const w = this.element.offsetWidth;
+        const h = this.element.offsetHeight;
 
-        /*
-        this.camera.position.x = -0;
-        this.camera.position.y = -5;
-        */
+        this.scene = new Scene();
+        this.camera = new PerspectiveCamera(45, w / h, 1, 10);
+        this.scene.add(this.camera);
+
         this.camera.position.z = 5;
 
-        var controls = new THREE.TrackballControls(this.camera, this.element);
+        const controls = new OrbitControls(this.camera, this.element);
 
-        controls.rotateSpeed = 20.0;
+        controls.rotateSpeed = 2.0;
         controls.zoomSpeed = 1.2;
 
         controls.noZoom = false;
@@ -44,12 +53,18 @@ export class Renderer {
         controls.dynamicDampingFactor = 0.3;
 
         this.controls = controls;
+
+        const boxGeom = new BoxBufferGeometry(2, 2, 2);
+        this.box = new Mesh(boxGeom, new MeshBasicMaterial({ color: 0xff0000 }));
+        this.scene.add(this.box);
+
+        this.setSize(w, h);
     }
 
 
     setSize(w, h) {
         this.renderer.setSize(w, h);
-        this.camera.aspect = w/h;
+        this.camera.aspect = w / h;
         this.camera.updateProjectionMatrix();
     }
 
@@ -60,7 +75,7 @@ export class Renderer {
                 this.controls.update();
             }
             requestAnimationFrame(renderLoop);
-        }
+        };
         requestAnimationFrame(renderLoop);
     }
 }
