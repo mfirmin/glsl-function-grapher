@@ -1,70 +1,12 @@
-
-
-#main {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    bottom: .5vw;
+.constant {
+    color: green;
 }
 
-#controlpanel {
-    position: absolute;
-    width: 39vw;
-    height: 100%;
-    left: .5vw;
-
-}
-
-#controls {
-    position: absolute;
-    width: 100%;
-    height: 49%;
-    bottom: 0;
-    border: 2px solid gray;
-}
-
-
-#fninput {
-
-    position: absolute;
-    width: 100%;
-    height: 49%;
-    top: .5vw;
-}
-
-#fndisplay { 
-    position: absolute;
-    width: 50vw;
-    height: 5vw;
-    left: 40vw;
-    top: .5vw;
-    border: 2px solid gray;
-}
-
-#grapher {
-
-    position: absolute;
-    width: 50vw;
-    height: 50vw;
-    left: 40vw;
-    top: 6vw;
-    border: 2px solid gray;
-
-}
-
-.ThreePanel {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-}
-
-.drag-number {
-    display: inline; 
-    text-decoration: underline; 
+.error {
     color: red;
 }
 
-
-input[type=number] {
-    width: 40px;
-} 
+.drag-number {
+    text-decoration: underline; 
+    color: #00eea0;
+}

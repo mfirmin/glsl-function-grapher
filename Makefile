@@ -1,20 +1,25 @@
+MAIN = static/functiongrapher.js
 
 SOURCEDIR = src
 SOURCES = $(shell find $(SOURCEDIR) -name '*.js')
 
-all: static/functiongrapher.js Makefile
+.PHONY: all clean build
+
+all: $(MAIN) Makefile
 
 clean: 
-	rm static/functiongrapher.js
+	rm $(MAIN)
 
-build: static/functiongrapher.js
-	@make static/functiongrapher.js
+build: $(MAIN)
 
-static/functiongrapher.js:  $(SOURCES)
-	rollup --globals jquery:jQuery -i src/index.js -o static/functiongrapher.js -f iife --name FunctionGrapher
+$(MAIN): $(SOURCES)
+	npm run build
 
-dragNumber: src/dragNumber.js Makefile
-	rollup --globals jquery:jQuery -i src/dragNumber.js -o static/dragNumber.js -f iife --name dragNumber
+watch: 
+	npm run watch
 
-watch: build
-	watchman-make -p 'src/**/*.js' -t build
+run:
+	bundle exec jekyll serve 
+
+docs:
+	echo "Implement me!"

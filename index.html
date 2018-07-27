@@ -3,17 +3,64 @@ title: Michael Firmin
 ---
 <!DOCTYPE html>
 <html>
-    <head>
+  <head>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>GLSL 3D Function Grapher</title>
 
     <link rel="stylesheet" type="text/css" href="css/functiongrapher.css">
-    <script type="text/javascript" src="//code.jquery.com/jquery-1.12.0.min.js"></script>
-    <script type="text/javascript" src="static/lib/three.min.js"></script>
-    <script type="text/javascript" src="static/lib/TrackballControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="static/functiongrapher.js"></script>
+  </head>
+<body>
+  <div id="app">
+    <div id="intro" :style="inputStyle">
+      <h1 v-if="state === 'initial'" style="text-align: center;">3D Function Grapher!</h1><br>
+      Enter an equation:<br>
+      <eqn-input ref="input" @graph="updateEquation"></eqn-input>
+      <div id="examples" v-if="state === 'initial'">
+        Or try an example function:
+        <button @click="example('clebsch')">Clebsch Diagonal Cubic</button>
+        <button @click="example('kiss')">Kiss Surface</button>
+        <button @click="example('plane')">Simple Plane</button>
+        <button @click="example('sin')">z=sin(x,y)</button>
+      </div>
+    </div>
+    <main-graph ref="main" v-if="state === 'graphing'" :style="graphStyle"></main-graph>
+    <eqn-edit v-if="state === 'graphing'" :style="editStyle" :equationhtml="equationHtml" @coefficient-changed="updateCoefficient"></eqn-edit>
+    <!--
+    <controls></controls>
+    -->
+  </div>
+  <!--
+    <div id='main'>
+    <div id='controlpanel'>
+    <div id='controls'>
+    <input type="checkbox" id="opacity" value="Opaque">Opaque<br>
+    x limits: [<div id="xmin-container" style="display: inline;"></div>, <div id="xmax-container" style="display: inline;"></div>] <br>
+    y limits: [<div id="ymin-container" style="display: inline;"></div>, <div id="ymax-container" style="display: inline;"></div>] <br>
+    z limits: [<div id="zmin-container" style="display: inline;"></div>, <div id="zmax-container" style="display: inline;"></div>] <br>
+    </div>
+    <div id='fninput'>
+
+
+    Function Input: <br>
+    <textarea rows="5" cols="80" id="functionbox">81.0*(x*x*x + y*y*y + z*z*z) - &#13;&#10;            189.0*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + &#13;&#10;            54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0&#13;&#10;</textarea> <br>
+    <button id='getFunction'>Graph!</button> <br>
+    <p>
+    <button id='clebsch'>Clebsch Diagonal Cubic</button>
+    <button id='kiss'>Kiss Surface</button>
+    <button id='sin'>z=sin(xy)</button>
+    <button id='plane'>Simple Plane</button>
+    </p>
+
+
+    </div>
+    </div>
+    <div id="fndisplay"></div>
+    <div id='grapher'></div>
+    </div>
     <script>
-        $(document).ready(function() {
+      $(document).ready(function() {
             var fg = new FunctionGrapher.FunctionGrapher();
 
             var functions = {
@@ -40,7 +87,7 @@ title: Michael Firmin
             $('#sin').click(() => update('sin'));
             $('#plane').click(() => update('plane'));
 
-            // controls
+      // controls
             $('#opacity').change(function() {
                 fg.setOpacity((this.checked) ? 1 : 0);
             });
@@ -82,34 +129,268 @@ title: Michael Firmin
             zmax.makeDraggable();
         });
     </script>
-    </head>
-<body>
-    <div id='main'>
-        <div id='controlpanel'>
-            <div id='controls'>
-                <input type="checkbox" id="opacity" value="Opaque">Opaque<br>
-                x limits: [<div id="xmin-container" style="display: inline;"></div>, <div id="xmax-container" style="display: inline;"></div>] <br>
-                y limits: [<div id="ymin-container" style="display: inline;"></div>, <div id="ymax-container" style="display: inline;"></div>] <br>
-                z limits: [<div id="zmin-container" style="display: inline;"></div>, <div id="zmax-container" style="display: inline;"></div>] <br>
-            </div>
-            <div id='fninput'>
+    -->
+  <script>
+    Vue.component('eqn-input', FG.components.eqnInput);
+    Vue.component('eqn-edit', FG.components.eqnEdit);
+    Vue.component('main-graph', FG.components.mainGraph);
+    Vue.component('drag-number', FG.components.dragNumber);
 
+    // Mapping of method name to glsl equivalent
+    const validFunctions = {
+      abs: {
+        glsl: 'abs',
+        numArgs: 1,
+      },
+      ceil: {
+        glsl: 'ceil',
+        numArgs: 1,
+      },
+      exp: {
+        glsl: 'exp',
+        numArgs: 1,
+      },
+      floor: {
+        glsl: 'floor',
+        numArgs: 1,
+      },
+      log: {
+        glsl: 'log',
+        numArgs: 1,
+      },
+      log2: {
+        glsl: 'log2',
+        numArgs: 1,
+      },
+      max: {
+        glsl: 'max',
+        numArgs: 2,
+      },
+      min: {
+        glsl: 'min',
+        numArgs: 2,
+      },
+      mod: {
+        glsl: 'mod',
+        numArgs: 2,
+      },
+      pow: {
+        glsl: 'pow',
+        numArgs: 2,
+      },
+      round: {
+        glsl: 'round',
+        numArgs: 1,
+      },
+      sign: {
+        glsl: 'sign',
+        numArgs: 1,
+      },
+      sin: {
+        glsl: 'sin',
+        numArgs: 1,
+      },
+      asin: {
+        glsl: 'asin',
+        numArgs: 1,
+      },
+      arcsin: {
+        glsl: 'asin',
+        numArgs: 1,
+      },
+      acos: {
+        glsl: 'acos',
+        numArgs: 1,
+      },
+      arccos: {
+        glsl: 'acos',
+        numArgs: 1,
+      },
+      sqrt: {
+        glsl: 'sqrt',
+        numArgs: 1,
+      },
+      cos: {
+        glsl: 'cos',
+        numArgs: 1,
+      },
+      tan: {
+        glsl: 'tan',
+        numArgs: 1,
+      },
+      atan: {
+        glsl: 'atan',
+        numArgs: 1,
+      },
+      atan2: {
+        glsl: 'atan',
+        numArgs: 2,
+      },
+      arctan: {
+        glsl: 'atan',
+        numArgs: 1,
+      },
+      arctan2: {
+        glsl: 'atan',
+        numArgs: 2,
+      },
+    };
 
-                Function Input: <br>
-                <textarea rows="5" cols="80" id="functionbox">81.0*(x*x*x + y*y*y + z*z*z) - &#13;&#10;            189.0*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + &#13;&#10;            54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0&#13;&#10;</textarea> <br>
-                <button id='getFunction'>Graph!</button> <br>
-                <p>
-                <button id='clebsch'>Clebsch Diagonal Cubic</button>
-                <button id='kiss'>Kiss Surface</button>
-                <button id='sin'>z=sin(xy)</button>
-                <button id='plane'>Simple Plane</button>
-                </p>
+    nodeId = 0;
 
+    function pushStatic(value, output, glsl = null) {
+      if (glsl === null) {
+        glsl = value;
+      }
+      const ol = output.length;
+      if (ol === 0 || output[ol - 1].type === 'coefficient') {
+        output.push({
+          type: 'static',
+          value,
+          glsl,
+        });
+      } else if (output[ol - 1].type === 'static') {
+        output[ol - 1].value += value;
+        output[ol - 1].glsl += glsl;
+      }
+    }
 
-            </div>
-        </div>
-        <div id="fndisplay"></div>
-        <div id='grapher'></div>
-    </div>
+    function pushCoefficient(value, output) {
+        output.push({
+          type: 'coefficient',
+          value: value,
+          id: nodeId++,
+        });
+    }
+
+    function toHtml(node, output) {
+      if (FG.math.type.isConstantNode(node)) {
+        pushCoefficient(node.value, output);
+      } else if (FG.math.type.isSymbolNode(node)) {
+        const val = node.name.toLowerCase();
+        if (val === 'x' || val === 'y' || val === 'z') {
+          pushStatic(val, output);
+        } else if (FG.math[val] !== undefined && typeof FG.math[val] === 'number') {
+          pushStatic(val, output, FG.math[val]);
+        } else {
+          throw new Error(`Unknown variable ${node.name}`);
+        }
+      } else if (FG.math.type.isParenthesisNode(node)) {
+        pushStatic('(', output);
+        toHtml(node.content, output);
+        pushStatic(')', output);
+      } else if (FG.math.type.isOperatorNode(node)) {
+        const { args, fn, op } = node;
+        if (args.length === 2) {
+          toHtml(args[0], output) ;
+          pushStatic(` ${op} `, output);
+          toHtml(args[1], output);
+        } else if (args.length === 1 && (fn === 'unaryMinus' || fn === 'unaryPlus')) {
+          if (FG.math.type.isConstantNode(args[0])) {
+            const value = Number(`${op}${args[0].value}`);
+            pushCoefficient(value, output);
+          } else {
+            pushStatic(` ${op}`, output);
+            toHtml(args[0], output);
+          }
+        } else {
+          throw new Error(`Unknown/unsupported operator ${fn}`);
+        }
+      } else if (FG.math.type.isFunctionNode(node)) {
+        const fn = node.fn.name;
+        if (validFunctions[fn] === undefined) {
+          throw new Error(`Unknown or unsupported function ${fn}`);
+        }
+        if (validFunctions[fn].numArgs !== node.args.length) {
+          throw new Error(`Function "${fn}" expects ${validFunctions[fn].numArgs} arguments. Got ${node.args.length} instead.`);
+        }
+        pushStatic(`${fn}(`, output, `${validFunctions[fn].glsl}(`);
+        for (param of node.args) {
+          toHtml(param, output);
+        }
+        pushStatic(')', output);
+      } else {
+        console.warn('UNKNOWN NODE TYPE!');
+        console.warn(node);
+
+        throw new Error(`Bad syntax or unsupported functionality`);
+      }
+    }
+    const app = new Vue({
+      el: '#app',
+      data: {
+        state: 'initial', // or 'graphing'
+        equation: '',
+        inputStyle: {
+          position: 'absolute',
+          left: '25vw',
+          top: '25vh',
+        },
+        graphStyle: {
+          position: 'absolute',
+          left: '25vw',
+          top: '150px',
+        },
+        editStyle: {
+          position: 'absolute',
+          left: '25vw',
+          top: 'calc(200px + 75vh)',
+        },
+      },
+      methods: {
+        updateEquation: function(event) {
+          if (this.state !== 'graphing') {
+            this.state = 'graphing';
+          }
+          this.equation = event.newEquation;
+          this.inputStyle.top = '50px';
+        },
+        example: function(which) {
+          let equation = '';
+          switch (which) {
+            case 'clebsch':
+              equation = '81.0*(x*x*x + y*y*y + z*z*z) - 189.0*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + 54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0';
+              break;
+            case 'kiss':
+              equation = 'z*z*z*z - z*z*z*z*z - x*x - y*y';
+              break;
+            case 'plane':
+              equation = '1*x + 0 - z';
+              break;
+            case 'sin':
+              equation = 'sin(x*y) - z';
+              break;
+            default:
+              // Error, unknown example!
+              return;
+          }
+
+          this.$refs.input.equation = equation;
+          this.$refs.input.graph();
+        },
+        updateCoefficient: function(val) {
+          this.$refs.main.updateCoefficient(val.key, val.value);
+        }
+      },
+      computed: {
+        equationHtml: function() {
+          const output = [];
+          try {
+            const node = FG.math.parse(this.equation);
+            toHtml(node, output);
+            this.$nextTick(() => {
+              this.$refs.main.setEquation(output);
+            });
+            return output;
+          } catch (e) {
+            return [{
+              type: 'error',
+              value: `Error: ${e.message}`,
+            }];
+          }
+        },
+      },
+    });
+  </script>
 </body>
 </html>

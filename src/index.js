@@ -1,8 +1,10 @@
+import { components } from './components/index';
 
-import { default as FunctionGrapher } from './functionGrapher';
-import { default as DragNumber } from './dragNumber';
-import { default as EquationElement } from './equationElement';
+import * as math from 'mathjs';
 
-const FG = { FunctionGrapher, DragNumber, EquationElement };
+const FG = {
+    components,
+    math: math.default,
+};
 
 export default FG;
