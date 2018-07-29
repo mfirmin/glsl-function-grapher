@@ -5,6 +5,7 @@
         "no-multi-spaces": ["error", { "exceptions": { "VariableDeclarator": true }}],
         "no-param-reassign": "off",
         "no-restricted-syntax": "off",
+        "no-underscore-dangle": "off",
         "import/prefer-default-export": "off"
     },
     "env": {

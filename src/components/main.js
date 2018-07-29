@@ -26,6 +26,9 @@ export const mainGraph = {
         </div>
     `,
     methods: {
+        setOpacity(o) {
+            this.fg.opacity = o;
+        },
         setEquation(eqn) {
             const uniforms = {};
             let glsl = '';

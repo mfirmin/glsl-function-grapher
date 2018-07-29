@@ -3,7 +3,6 @@ import {
     FrontSide,
     ShaderMaterial,
     Vector2,
-    Vector3,
 } from './lib/three.module';
 
 export class FunctionGrapher {
@@ -27,13 +26,12 @@ export class FunctionGrapher {
             54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0;
         `;
 
-        this.stepsize = 0.01;
-        this.opacity = 0.5;
-        this.surface = 0;
+        this._stepsize = 0.01;
+        this._opacity = 1.0;
 
-        this.xBounds = [-1, 1];
-        this.yBounds = [-1, 1];
-        this.zBounds = [-1, 1];
+        this._xBounds = [-1, 1];
+        this._yBounds = [-1, 1];
+        this._zBounds = [-1, 1];
 
         // Stepsize for sampling... 1 seems a good compromise between real-time shading and quality
         // on my MBP
@@ -43,10 +41,50 @@ export class FunctionGrapher {
         this.renderer.go();
     }
 
-    setOpacity(val) {
-        this.uniforms.opacity.value = val;
+    set stepsize(val) {
+        this._stepsize = val;
+        this.material.uniforms.stepsize.value = val;
     }
 
+    get stepsize() {
+        return this._stepsize;
+    }
+
+    set opacity(val) {
+        this._opacity = val;
+        this.material.uniforms.opacity.value = val;
+    }
+
+    get opacity() {
+        return this._opacity;
+    }
+
+    set xBounds(val) {
+        this._xBounds = val;
+        this.material.uniforms.xBounds.set(val[0], val[1]);
+    }
+
+    get xBounds() {
+        return this._xBounds;
+    }
+
+    set yBounds(val) {
+        this._yBounds = val;
+        this.material.uniforms.yBounds.set(val[0], val[1]);
+    }
+
+    get yBounds() {
+        return this._yBounds;
+    }
+
+    set zBounds(val) {
+        this._zBounds = val;
+        this.material.uniforms.zBounds.set(val[0], val[1]);
+    }
+
+    get zBounds() {
+        return this._zBounds;
+    }
     // updateBounds(val) {
     //     this.renderer.removeEntity(this.box);
     //
@@ -87,7 +125,6 @@ export class FunctionGrapher {
         const uniforms = {
             stepsize: { type: 'f', value: this.stepsize },
             opacity: { type: 'f', value: this.opacity },
-            surface: { type: 'f', value: this.surface },
 
             xBounds: { type: 'v2', value: new Vector2(this.xBounds[0], this.xBounds[1]) },
             yBounds: { type: 'v2', value: new Vector2(this.yBounds[0], this.yBounds[1]) },
@@ -126,7 +163,6 @@ export class FunctionGrapher {
             varying vec4 vPosition;
             uniform float stepsize;
             uniform float opacity;
-            uniform float surface;
             uniform vec2 xBounds;
             uniform vec2 yBounds;
             uniform vec2 zBounds;

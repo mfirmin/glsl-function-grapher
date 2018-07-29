@@ -1,6 +1,5 @@
-import { components } from './components/index';
-
 import * as math from 'mathjs';
+import { components } from './components/index';
 
 const FG = {
     components,

@@ -22,14 +22,12 @@ title: Michael Firmin
         <button @click="example('clebsch')">Clebsch Diagonal Cubic</button>
         <button @click="example('kiss')">Kiss Surface</button>
         <button @click="example('plane')">Simple Plane</button>
-        <button @click="example('sin')">z=sin(x,y)</button>
+        <button @click="example('sin')">z=sin(xy)</button>
       </div>
     </div>
     <main-graph ref="main" v-if="state === 'graphing'" :style="graphStyle"></main-graph>
     <eqn-edit v-if="state === 'graphing'" :style="editStyle" :equationhtml="equationHtml" @coefficient-changed="updateCoefficient"></eqn-edit>
-    <!--
-    <controls></controls>
-    -->
+    <controls :style="controlsStyle" v-if="state === 'graphing'" @opacity-updated="opacityUpdated"></controls>
   </div>
   <!--
     <div id='main'>
@@ -135,6 +133,7 @@ title: Michael Firmin
     Vue.component('eqn-edit', FG.components.eqnEdit);
     Vue.component('main-graph', FG.components.mainGraph);
     Vue.component('drag-number', FG.components.dragNumber);
+    Vue.component('controls', FG.components.controls);
 
     // Mapping of method name to glsl equivalent
     const validFunctions = {
@@ -282,9 +281,17 @@ title: Michael Firmin
       } else if (FG.math.type.isOperatorNode(node)) {
         const { args, fn, op } = node;
         if (args.length === 2) {
-          toHtml(args[0], output) ;
-          pushStatic(` ${op} `, output);
-          toHtml(args[1], output);
+          if (op === '^') {
+            pushStatic('', output, 'pow(');
+            toHtml(args[0], output);
+            pushStatic(' ^ ', output, ', ');
+            toHtml(args[1], output);
+            pushStatic('', output, ')');
+          } else {
+            toHtml(args[0], output) ;
+            pushStatic(` ${op} `, output);
+            toHtml(args[1], output);
+          }
         } else if (args.length === 1 && (fn === 'unaryMinus' || fn === 'unaryPlus')) {
           if (FG.math.type.isConstantNode(args[0])) {
             const value = Number(`${op}${args[0].value}`);
@@ -305,8 +312,12 @@ title: Michael Firmin
           throw new Error(`Function "${fn}" expects ${validFunctions[fn].numArgs} arguments. Got ${node.args.length} instead.`);
         }
         pushStatic(`${fn}(`, output, `${validFunctions[fn].glsl}(`);
-        for (param of node.args) {
+        for (let i = 0; i < node.args.length; i++) {
+          const param = node.args[i];
           toHtml(param, output);
+          if (i < node.args.length - 1) {
+            pushStatic(', ', output);
+          }
         }
         pushStatic(')', output);
       } else {
@@ -335,6 +346,11 @@ title: Michael Firmin
           position: 'absolute',
           left: '25vw',
           top: 'calc(200px + 75vh)',
+        },
+        controlsStyle: {
+          position: 'absolute',
+          left: 'calc(75vw + 10px)',
+          top: '150px',
         },
       },
       methods: {
@@ -370,7 +386,10 @@ title: Michael Firmin
         },
         updateCoefficient: function(val) {
           this.$refs.main.updateCoefficient(val.key, val.value);
-        }
+        },
+        opacityUpdated: function(val) {
+          this.$refs.main.setOpacity(val);
+        },
       },
       computed: {
         equationHtml: function() {
