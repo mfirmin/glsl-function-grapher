@@ -57479,6 +57479,7 @@
 	        document.addEventListener('mouseup', (evt) => {
 	            if (this.dragging) {
 	                evt.preventDefault();
+	                evt.stopPropagation();
 	                this.onDragFinish(evt);
 	            }
 	        });
@@ -57489,7 +57490,6 @@
             v-if="state === 'drag'"
             class="drag-number"
             @mousedown="onDragStart"
-            @mouseup="onClick"
             >{{ value.toFixed(fix) }}</span>
         <input
             type="number"
@@ -57537,15 +57537,11 @@
 	            this.value = newValue;
 	        },
 	        onDragFinish() {
-	            this.dragged = false;
-	            this.dragging = false;
-	        },
-	        onClick() {
-	            // Only fire if we haven't dragged during this click
-	            // NOTE: It is necessary that this method is fired AFTER onDragFinish
 	            if (!this.dragged) {
 	                this.setInput();
 	            }
+	            this.dragged = false;
+	            this.dragging = false;
 	        },
 	    },
 	    watch: {
