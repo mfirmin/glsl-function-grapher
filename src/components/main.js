@@ -35,17 +35,31 @@ export const mainGraph = {
         setR(r) {
             this.fg.R = r;
         },
-        setEquation(eqn) {
-            const uniforms = {};
+        computeGLSL(eqn, uniforms) {
             let glsl = '';
             for (const node of eqn) {
                 if (node.type === 'coefficient') {
-                    uniforms[`var${node.id}`] = { value: node.value, type: 'f' };
+                    if (uniforms[`var${node.id}`] === undefined) {
+                        uniforms[`var${node.id}`] = { value: node.value, type: 'f' };
+                    }
                     glsl += ` var${node.id} `;
                 } else if (node.type === 'static') {
                     glsl += node.glsl;
+                } else if (node.type === 'power') {
+                    // pow(x, y) is undefined for x <= 0, so we just repeat multiplication instead.
+                    const innerGLSL = `(${this.computeGLSL(node.value, uniforms)})`;
+                    for (let i = 0; i < node.power - 1; i++) {
+                        glsl += `${innerGLSL} *`;
+                    }
+                    glsl += `${innerGLSL}`;
                 }
             }
+            return glsl;
+        },
+        setEquation(eqn) {
+            console.log(eqn);
+            const uniforms = {};
+            const glsl = this.computeGLSL(eqn, uniforms);
 
             this.fg.setEquation(glsl, uniforms);
         },

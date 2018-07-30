@@ -20,11 +20,8 @@ export class FunctionGrapher {
         `;
 
 
-        const defaultEqn = `
-            81.0*(x*x*x + y*y*y + z*z*z) -
-            189.0*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) +
-            54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0;
-        `;
+        // ensure we don't render anything by default
+        const defaultEqn = '100000.0';
 
         // stepsize * number of steps should be ~4 so we can view the whole plot along the diagonal
         this._stepsize = 0.012;

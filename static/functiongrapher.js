@@ -57570,13 +57570,16 @@
 	        };
 	    },
 	    template: `
-        <div :style="styleObject">
+        <span :style="styleObject">
             <span v-for="node in equationhtml">
                 <drag-number v-if="node.type === 'coefficient'" :initialvalue="node.value" :key="node.id" @value-changed="valueChanged"></drag-number>
                 <span v-else-if="node.type === 'static'">{{ node.value }}</span>
+                <span v-else-if="node.type === 'power'">
+                    <eqn-edit :equationhtml="node.value"></eqn-edit><sup>{{ node.power }}</sup>
+                </span>
                 <span v-else-if="node.type === 'error'" class="error">{{ node.value }}</span>
             </span>
-        </div>
+        </span>
     `,
 	    methods: {
 	        valueChanged(val) {
@@ -104729,11 +104732,8 @@
         `;
 
 
-	        const defaultEqn = `
-            81.0*(x*x*x + y*y*y + z*z*z) -
-            189.0*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) +
-            54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0;
-        `;
+	        // ensure we don't render anything by default
+	        const defaultEqn = '100000.0';
 
 	        // stepsize * number of steps should be ~4 so we can view the whole plot along the diagonal
 	        this._stepsize = 0.012;
@@ -105044,17 +105044,31 @@
 	        setR(r) {
 	            this.fg.R = r;
 	        },
-	        setEquation(eqn) {
-	            const uniforms = {};
+	        computeGLSL(eqn, uniforms) {
 	            let glsl = '';
 	            for (const node of eqn) {
 	                if (node.type === 'coefficient') {
-	                    uniforms[`var${node.id}`] = { value: node.value, type: 'f' };
+	                    if (uniforms[`var${node.id}`] === undefined) {
+	                        uniforms[`var${node.id}`] = { value: node.value, type: 'f' };
+	                    }
 	                    glsl += ` var${node.id} `;
 	                } else if (node.type === 'static') {
 	                    glsl += node.glsl;
+	                } else if (node.type === 'power') {
+	                    // pow(x, y) is undefined for x <= 0, so we just repeat multiplication instead.
+	                    const innerGLSL = `(${this.computeGLSL(node.value, uniforms)})`;
+	                    for (let i = 0; i < node.power - 1; i++) {
+	                        glsl += `${innerGLSL} *`;
+	                    }
+	                    glsl += `${innerGLSL}`;
 	                }
 	            }
+	            return glsl;
+	        },
+	        setEquation(eqn) {
+	            console.log(eqn);
+	            const uniforms = {};
+	            const glsl = this.computeGLSL(eqn, uniforms);
 
 	            this.fg.setEquation(glsl, uniforms);
 	        },

@@ -179,10 +179,6 @@ title: Michael Firmin
         glsl: 'mod',
         numArgs: 2,
       },
-      pow: {
-        glsl: 'pow',
-        numArgs: 2,
-      },
       round: {
         glsl: 'round',
         numArgs: 1,
@@ -248,13 +244,13 @@ title: Michael Firmin
         glsl = value;
       }
       const ol = output.length;
-      if (ol === 0 || output[ol - 1].type === 'coefficient') {
+      if (ol === 0 || output[ol - 1].type !== 'static') {
         output.push({
           type: 'static',
           value,
           glsl,
         });
-      } else if (output[ol - 1].type === 'static') {
+      } else {
         output[ol - 1].value += value;
         output[ol - 1].glsl += glsl;
       }
@@ -266,6 +262,18 @@ title: Michael Firmin
           value: value,
           id: nodeId++,
         });
+    }
+
+    function pushPower(left, right, output) {
+      const inner = [];
+      toHtml(left, inner);
+      const node = {
+        type: 'power',
+        value: inner,
+        power: right,
+      };
+
+      output.push(node);
     }
 
     function toHtml(node, output) {
@@ -288,14 +296,18 @@ title: Michael Firmin
         const { args, fn, op } = node;
         if (args.length === 2) {
           if (op === '^') {
-            pushStatic('', output, 'pow(');
-            toHtml(args[0], output);
-            pushStatic(' ^ ', output, ', ');
-            toHtml(args[1], output);
-            pushStatic('', output, ')');
+            if (FG.math.type.isConstantNode(args[1]) && Number.isInteger(args[1].value)) {
+              pushPower(args[0], args[1].value, output);
+            } else {
+              throw new Error('Powers must be positive, constant integers');
+            }
           } else {
             toHtml(args[0], output) ;
-            pushStatic(` ${op} `, output);
+            if (op !== '*') {
+              pushStatic(` ${op} `, output);
+            } else {
+              pushStatic('', output, ' * ');
+            }
             toHtml(args[1], output);
           }
         } else if (args.length === 1 && (fn === 'unaryMinus' || fn === 'unaryPlus')) {
@@ -371,16 +383,16 @@ title: Michael Firmin
           let equation = '';
           switch (which) {
             case 'clebsch':
-              equation = '81.0*(x*x*x + y*y*y + z*z*z) - 189.0*(x*x*y + x*x*z + y*y*x + y*y*z+ z*z*x + z*z*y) + 54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0';
+              equation = '81.0(x ^ 3 + y ^ 3 + z ^ 3) - 189.0(x ^ 2*y + x^2*z + y^2*x + y^2*z+ z^2*x + z^2*y) + 54.0(x*y*z) + 126.0(x*y+x*z+y*z) - 9.0(x^2+y^2+z^2) - 9.0(x+y+z) + 1.0';
               break;
             case 'kiss':
-              equation = 'z*z*z*z - z*z*z*z*z - x*x - y*y';
+              equation = '1z^4 - 1z^5 - 1x^2 - 1y^2';
               break;
             case 'plane':
-              equation = '1*x + 0 - z';
+              equation = '1x - (z + 0)';
               break;
             case 'sin':
-              equation = 'sin(x*y) - z';
+              equation = 'sin(1x*y) - 1z';
               break;
             default:
               // Error, unknown example!
