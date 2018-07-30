@@ -345,16 +345,12 @@ title: Michael Firmin
         throw new Error(`Bad syntax or unsupported functionality`);
       }
     }
+
     const app = new Vue({
       el: '#app',
       data: {
         state: 'initial', // or 'graphing'
         equation: '',
-        inputStyle: {
-          position: 'absolute',
-          left: '25vw',
-          top: '25vh',
-        },
         graphStyle: {
           position: 'absolute',
           left: '25vw',
@@ -374,10 +370,10 @@ title: Michael Firmin
       methods: {
         updateEquation: function(event) {
           if (this.state !== 'graphing') {
+            history.pushState({ equation: event.newEquation }, "graphing");
             this.state = 'graphing';
           }
           this.equation = event.newEquation;
-          this.inputStyle.top = '50px';
         },
         example: function(which) {
           let equation = '';
@@ -416,7 +412,7 @@ title: Michael Firmin
         },
       },
       computed: {
-        equationHtml: function() {
+        equationHtml() {
           const output = [];
           try {
             const node = FG.math.parse(this.equation);
@@ -432,7 +428,18 @@ title: Michael Firmin
             }];
           }
         },
+        inputStyle() {
+          return {
+            position: 'absolute',
+            left: '25vw',
+            top: this.state === 'initial' ? '25vh' : '50px',
+          };
+        },
       },
+    });
+
+    window.addEventListener('popstate', (state) => {
+      location.reload();
     });
   </script>
 </body>
