@@ -28,7 +28,7 @@ export class Renderer {
         } catch (e) {
             throw new Error('Could not initialize WebGL');
         }
-        this.renderer.setClearColor(0xffffff, 1);
+        this.renderer.setClearColor(0x000000, 1);
 
         this.element.append(this.renderer.domElement);
     }

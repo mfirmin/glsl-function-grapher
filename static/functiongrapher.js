@@ -104596,7 +104596,7 @@
 	        } catch (e) {
 	            throw new Error('Could not initialize WebGL');
 	        }
-	        this.renderer.setClearColor(0xffffff, 1);
+	        this.renderer.setClearColor(0x000000, 1);
 
 	        this.element.append(this.renderer.domElement);
 	    }
@@ -104675,8 +104675,10 @@
             54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0;
         `;
 
-	        this._stepsize = 0.01;
+	        this._stepsize = 0.008;
+	        this._R = 1;
 	        this._opacity = 1.0;
+	        this._brightness = 5.0;
 
 	        this._xBounds = [-1, 1];
 	        this._yBounds = [-1, 1];
@@ -104688,6 +104690,24 @@
 	        this.setEquation(defaultEqn, {});
 
 	        this.renderer.go();
+	    }
+
+	    set R(val) {
+	        this._R = val;
+	        this.material.uniforms.R.value = val;
+	    }
+
+	    get R() {
+	        return this._R;
+	    }
+
+	    set brightness(val) {
+	        this._brightness = val;
+	        this.material.uniforms.brightness.value = val;
+	    }
+
+	    get brightness() {
+	        return this._brightness;
 	    }
 
 	    set stepsize(val) {
@@ -104773,6 +104793,8 @@
 	    setEquation(glsl, coeffs) {
 	        const uniforms = {
 	            stepsize: { type: 'f', value: this.stepsize },
+	            R: { type: 'f', value: this.R },
+	            brightness: { type: 'f', value: this.brightness },
 	            opacity: { type: 'f', value: this.opacity },
 
 	            xBounds: { type: 'v2', value: new Vector2(this.xBounds[0], this.xBounds[1]) },
@@ -104797,6 +104819,8 @@
 	        });
 
 	        this.renderer.setMaterial(this.material);
+
+	        window.material = this.material;
 	    }
 
 	    updateCoefficient(id, value) {
@@ -104811,7 +104835,9 @@
 	        const fShader = `
             varying vec4 vPosition;
             uniform float stepsize;
+            uniform float R;
             uniform float opacity;
+            uniform float brightness;
             uniform vec2 xBounds;
             uniform vec2 yBounds;
             uniform vec2 zBounds;
@@ -104822,9 +104848,32 @@
                 return ${eqn};
             }
 
+            vec3 grad(vec3 prev, vec3 pt, vec3 next) {
+                float right = fn(next.x, pt.y, pt.z);
+                float left = fn(prev.x, pt.y, pt.z);
+                float up = fn(pt.x, next.y, pt.z);
+                float down = fn(pt.x, prev.y, pt.z);
+                float front = fn(pt.x, pt.y, next.z);
+                float back = fn(pt.x, pt.y, prev.z);
+
+                return vec3(0.5 * (right - left), 0.5 * up - down, 0.5 * front - back);
+            }
+
+            vec3 grad2(vec3 pt, float size) {
+                float right = fn(pt.x + size, pt.y, pt.z);
+                float left = fn(pt.x - size, pt.y, pt.z);
+                float up = fn(pt.x, pt.y + size, pt.z);
+                float down = fn(pt.x, pt.y - size, pt.z);
+                float front = fn(pt.x, pt.y, pt.z + size);
+                float back = fn(pt.x, pt.y, pt.z - size);
+
+                return vec3(0.5 * (right - left), 0.5 * up - down, 0.5 * front - back);
+            }
+
             vec3 ptToColor(vec3 pt) {
                 return vec3(1.,1.,1.)*(pt.xyz/vec3( xBounds.y - xBounds.x, yBounds.y - yBounds.x, zBounds.y - zBounds.x) + .5);
             }
+
 
             void main() {
                 vec3 ro = cameraPosition;
@@ -104832,47 +104881,73 @@
                 float t_entry = length(dir);
                 vec3 rd = normalize(dir);
 
+                vec3 lightPosition = cameraPosition;
+                float isoval = 0.0;
+
                 if (t_entry < 0.) { gl_FragColor = vec4(0.,0.,0.,1.); return; }
 
-                vec3 pt = ro+rd*t_entry;
+                vec3 rskip = rd * stepsize;
 
-                vec3 rskip = normalize(rd)*stepsize;
+                vec3 pt = ro + rd * t_entry;
 
-                vec3 I = vec3(0.,0.,0.);
-                int intersects = 0;
+                vec3 prev = pt - rskip;
+                vec3 next = pt + rskip;
 
-                float last = 0.0;
+                float I = 0.0;
+                float transparency = 1.0;
+
                 vec3 tols = vec3((xBounds.y - xBounds.x)*.01, (yBounds.y - yBounds.x)*.01, (zBounds.y - zBounds.x)*.01);
-                for (int i = 0; i < 1000; i++) {
+                for (int i = 0; i < 400; i++) {
                     // outside roi case.
                     if (pt.z < zBounds.x-tols.z || pt.z > zBounds.y+tols.z || pt.x < xBounds.x-tols.x || pt.x > xBounds.y+tols.x || pt.y > yBounds.y+tols.y || pt.y < yBounds.x-tols.y) { break; }
+
                     // plot outline
-                    float curr = 0.;
-                    curr = fn(pt.x, pt.y, pt.z);
+                    float value = fn(pt.x, pt.y, pt.z);
+                    vec3 grad = grad2(pt, stepsize);
+//                    vec3 grad = grad(prev, pt, next);
+                    float alpha = 0.0;
 
-                    if (last*curr < 0.) {
-                        vec3 grad = vec3(0.,0.,0.);
+                    float delta = abs(isoval - value);
 
-                         // Gradient-less coloring?
-                        if (opacity >= 1.) {
-                            gl_FragColor = vec4(ptToColor(pt.xyz), 1.);
-                            return;
-                        } else {
-                            I += vec3(1.,1.,1.)*(pt.xyz/2.+.5);
-                            intersects++;
-                        }
+                    float magGrad = length(grad);
 
+                    if (delta <= R * magGrad) {
+                        alpha = 1.0 - (delta / (R * magGrad));
                     }
-                    last = curr;
-                    pt = pt + rskip;
+
+                    vec3 normal = vec3(0.0);
+                    if (magGrad > 0.0) {
+                        normal = vec3(grad / magGrad);
+                    }
+                    if (dot(normal, cameraPosition - pt) < 0.0) {
+                        normal = -normal;
+                    }
+
+                    vec3 L = normalize(lightPosition - pt);
+
+                    if (dot(normal, L) > 0.0) {
+                        I += transparency * stepsize * alpha * abs(dot(normal, L));
+                    }
+
+                    transparency *= exp(-alpha * stepsize);
+
+                    prev = pt;
+                    pt = next;
+                    next += rskip;
+
+                    if (transparency < 0.1) {
+                        break;
+                    }
                 }
 
-                if ( opacity < 1.) {
-                    if (I == vec3(0.,0.,0.)) { gl_FragColor = vec4(1.,1.,1.,1.); return; }
-                    gl_FragColor = vec4((I/float(intersects)),1.);
-                    return;
+                I = min(1.0, I) * brightness;
+
+                if (I < 0.1) {
+                    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+                } else {
+                    gl_FragColor = vec4(I, I, I, 1.0);
                 }
-                gl_FragColor = vec4(1.,1.,1.,1.);
+                gl_FragColor = vec4(I, I, I, 1.0);
 
             }
         `;
