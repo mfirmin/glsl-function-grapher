@@ -26,10 +26,11 @@ export class FunctionGrapher {
             54.0*(x*y*z) + 126.0*(x*y+x*z+y*z) - 9.0*(x*x+y*y+z*z) - 9.0*(x+y+z) + 1.0;
         `;
 
-        this._stepsize = 0.008;
+        // stepsize * number of steps should be ~4 so we can view the whole plot along the diagonal
+        this._stepsize = 0.012;
         this._R = 1;
         this._opacity = 1.0;
-        this._brightness = 5.0;
+        this._brightness = 1.0;
 
         this._xBounds = [-1, 1];
         this._yBounds = [-1, 1];
@@ -192,6 +193,8 @@ export class FunctionGrapher {
             uniform vec2 xBounds;
             uniform vec2 yBounds;
             uniform vec2 zBounds;
+
+            const int numSteps = 300;
             ${extraUniforms}
             // Describe ROI as a sphere later?
 
@@ -199,18 +202,7 @@ export class FunctionGrapher {
                 return ${eqn};
             }
 
-            vec3 grad(vec3 prev, vec3 pt, vec3 next) {
-                float right = fn(next.x, pt.y, pt.z);
-                float left = fn(prev.x, pt.y, pt.z);
-                float up = fn(pt.x, next.y, pt.z);
-                float down = fn(pt.x, prev.y, pt.z);
-                float front = fn(pt.x, pt.y, next.z);
-                float back = fn(pt.x, pt.y, prev.z);
-
-                return vec3(0.5 * (right - left), 0.5 * up - down, 0.5 * front - back);
-            }
-
-            vec3 grad2(vec3 pt, float size) {
+            vec3 grad(vec3 pt, float size) {
                 float right = fn(pt.x + size, pt.y, pt.z);
                 float left = fn(pt.x - size, pt.y, pt.z);
                 float up = fn(pt.x, pt.y + size, pt.z);
@@ -239,59 +231,51 @@ export class FunctionGrapher {
 
                 vec3 rskip = rd * stepsize;
 
-                vec3 pt = ro + rd * t_entry;
-
-                vec3 prev = pt - rskip;
-                vec3 next = pt + rskip;
+                // Start at the far end and work our way back to the entry point
+                // (back compositing)
+                vec3 pt = ro + rd * (t_entry + float(numSteps) * stepsize);
 
                 float I = 0.0;
-                float transparency = 1.0;
 
-                vec3 tols = vec3((xBounds.y - xBounds.x)*.01, (yBounds.y - yBounds.x)*.01, (zBounds.y - zBounds.x)*.01);
-                for (int i = 0; i < 400; i++) {
-                    // outside roi case.
-                    if (pt.z < zBounds.x-tols.z || pt.z > zBounds.y+tols.z || pt.x < xBounds.x-tols.x || pt.x > xBounds.y+tols.x || pt.y > yBounds.y+tols.y || pt.y < yBounds.x-tols.y) { break; }
+                for (int i = 0; i < numSteps; i++) {
+                    // only process if inside the volume
+                    if (pt.z >= zBounds.x && pt.z <= zBounds.y && pt.x >= xBounds.x && pt.x <= xBounds.y && pt.y <= yBounds.y && pt.y >= yBounds.x) {
+                        // plot outline
+                        float value = fn(pt.x, pt.y, pt.z);
+                        vec3 grad = grad(pt, stepsize);
+                        float alpha = 0.0;
 
-                    // plot outline
-                    float value = fn(pt.x, pt.y, pt.z);
-                    vec3 grad = grad2(pt, stepsize);
-//                    vec3 grad = grad(prev, pt, next);
-                    float alpha = 0.0;
+                        float delta = abs(isoval - value);
 
-                    float delta = abs(isoval - value);
+                        float magGrad = length(grad);
 
-                    float magGrad = length(grad);
+                        if (delta <= R * magGrad) {
+                            alpha = 1.0 - (delta / (R * magGrad));
+                            alpha *= opacity;
+                        }
 
-                    if (delta <= R * magGrad) {
-                        alpha = 1.0 - (delta / (R * magGrad));
+                        vec3 normal = vec3(0.0);
+                        if (magGrad > 0.0) {
+                            normal = vec3(grad / magGrad);
+                        }
+                        if (dot(normal, cameraPosition - pt) < 0.0) {
+                            normal = -normal;
+                        }
+
+                        vec3 L = normalize(lightPosition - pt);
+
+                        if (dot(normal, L) > 0.0) {
+                            // forward compositing (poor results)
+                            // I += transparency * stepsize * alpha * abs(dot(normal, L));
+                            // backward compositing
+                            I = I * ( 1.0 - alpha) + abs(dot(normal, L)) * alpha;
+                        }
                     }
 
-                    vec3 normal = vec3(0.0);
-                    if (magGrad > 0.0) {
-                        normal = vec3(grad / magGrad);
-                    }
-                    if (dot(normal, cameraPosition - pt) < 0.0) {
-                        normal = -normal;
-                    }
-
-                    vec3 L = normalize(lightPosition - pt);
-
-                    if (dot(normal, L) > 0.0) {
-                        I += transparency * stepsize * alpha * abs(dot(normal, L));
-                    }
-
-                    transparency *= exp(-alpha * stepsize);
-
-                    prev = pt;
-                    pt = next;
-                    next += rskip;
-
-                    if (transparency < 0.1) {
-                        break;
-                    }
+                    pt -= rskip;
                 }
 
-                I = min(1.0, I) * brightness;
+                I = min(1.0, I * brightness);
 
                 if (I < 0.1) {
                     gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);

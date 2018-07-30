@@ -27,7 +27,13 @@ title: Michael Firmin
     </div>
     <main-graph ref="main" v-if="state === 'graphing'" :style="graphStyle"></main-graph>
     <eqn-edit v-if="state === 'graphing'" :style="editStyle" :equationhtml="equationHtml" @coefficient-changed="updateCoefficient"></eqn-edit>
-    <controls :style="controlsStyle" v-if="state === 'graphing'" @opacity-updated="opacityUpdated"></controls>
+    <controls
+      :style="controlsStyle"
+      v-if="state === 'graphing'"
+      @opacity-updated="opacityUpdated"
+      @brightness-updated="brightnessUpdated"
+      @r-updated="rUpdated">
+    </controls>
   </div>
   <!--
     <div id='main'>
@@ -388,7 +394,13 @@ title: Michael Firmin
           this.$refs.main.updateCoefficient(val.key, val.value);
         },
         opacityUpdated: function(val) {
-          this.$refs.main.setOpacity(val);
+          this.$refs.main.setOpacity(val.value);
+        },
+        rUpdated: function(val) {
+          this.$refs.main.setR(val.value);
+        },
+        brightnessUpdated: function(val) {
+          this.$refs.main.setBrightness(val.value);
         },
       },
       computed: {

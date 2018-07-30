@@ -29,6 +29,12 @@ export const mainGraph = {
         setOpacity(o) {
             this.fg.opacity = o;
         },
+        setBrightness(b) {
+            this.fg.brightness = b;
+        },
+        setR(r) {
+            this.fg.R = r;
+        },
         setEquation(eqn) {
             const uniforms = {};
             let glsl = '';

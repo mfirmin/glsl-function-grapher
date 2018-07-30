@@ -1,17 +1,43 @@
 export const dragNumber = {
-    props: ['initialvalue'],
-    data: function () {
+    props: {
+        initialvalue: {
+            type: Number,
+            default: 0.0,
+        },
+        resolution: {
+            type: Number,
+            default: 1.0,
+        },
+        max: {
+            type: Number,
+            default: Infinity,
+        },
+        min: {
+            type: Number,
+            default: -Infinity,
+        },
+        'pixels-per-tick': {
+            type: Number,
+            default: 1,
+        },
+        fix: {
+            type: Number,
+            default: 2,
+        },
+    },
+    data() {
         return {
             value: 0.0,
-            resolution: 1, // change in value per pixel dragged
+            _resolution: 1, // change in value per pixel dragged
             state: 'drag', // 'drag' or 'input'
             dragging: false,
             mouseStart: [0, 0],
             valueStart: 0,
         };
     },
-    created: function() {
-        this.value = this.initialvalue;
+    created() {
+        this.value = Number(this.initialvalue);
+        this._resolution = this.resolution !== undefined ? Number(this.resolution) : 1.0;
         // These must be registered to the document so that we can
         // drag beyond the end of the element containing the number
         document.addEventListener('mousemove', (evt) => {
@@ -34,51 +60,66 @@ export const dragNumber = {
             class="drag-number"
             @mousedown="onDragStart"
             @mouseup="onClick"
-            >{{ value }}</span>
+            >{{ value.toFixed(fix) }}</span>
         <input
             type="number"
             ref="input"
             v-else-if="state === 'input'"
-            v-model.number.lazy="value"
             @keyup.enter="setDrag"
             @blur="setDrag">
     `,
     methods: {
-        setInput: function() {
+        setInput() {
             this.state = 'input';
             this.$nextTick(() => {
+                this.$refs.input.value = this.value;
                 this.$refs.input.focus();
             });
         },
-        setDrag: function() {
+        setDrag() {
+            let newValue = Number(this.$refs.input.value);
+            if (newValue > this.max) {
+                newValue = this.max;
+            }
+            if (newValue < this.min) {
+                newValue = this.min;
+            }
+            this.value = newValue;
             this.state = 'drag';
         },
-        onDragStart: function(evt) {
+        onDragStart(evt) {
             this.mouseStart = [evt.pageX, evt.pageY];
             this.valueStart = this.value;
             this.dragging = true;
             this.dragged = false;
         },
-        onDrag: function(evt) {
+        onDrag(evt) {
             // Mark that we are dragging, so we don't accidentally switch to an input on mouseup
             this.dragged = true;
-            const delta = evt.pageX - this.mouseStart[0];
-            this.value = this.valueStart + delta * this.resolution;
+            const delta = Math.floor((evt.pageX - this.mouseStart[0]) / this.pixelsPerTick);
+            let newValue = this.valueStart + delta * this._resolution;
+            if (newValue > this.max) {
+                newValue = this.max;
+            }
+            if (newValue < this.min) {
+                newValue = this.min;
+            }
+            this.value = newValue;
         },
-        onDragFinish: function() {
+        onDragFinish() {
             this.dragged = false;
             this.dragging = false;
         },
-        onClick: function() {
+        onClick() {
             // Only fire if we haven't dragged during this click
             // NOTE: It is necessary that this method is fired AFTER onDragFinish
             if (!this.dragged) {
                 this.setInput();
             }
-        }
+        },
     },
     watch: {
-        value: function(val) {
+        value(val) {
             this.$emit('value-changed', {
                 key: this.$vnode.key,
                 value: val,
