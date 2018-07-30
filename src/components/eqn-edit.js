@@ -1,6 +1,6 @@
 export const eqnEdit = {
     props: ['equationhtml'],
-    data: function () {
+    data() {
         return {
             styleObject: {
                 width: '50vw',
@@ -12,7 +12,14 @@ export const eqnEdit = {
     template: `
         <span :style="styleObject">
             <span v-for="node in equationhtml">
-                <drag-number v-if="node.type === 'coefficient'" :initialvalue="node.value" :key="node.id" @value-changed="valueChanged"></drag-number>
+                <drag-number
+                    v-if="node.type === 'coefficient'"
+                    :resolution="0.1"
+                    :pixels-per-tick="2.0"
+                    :initialvalue="node.value"
+                    :key="node.id"
+                    @value-changed="valueChanged">
+                </drag-number>
                 <span v-else-if="node.type === 'static'">{{ node.value }}</span>
                 <span v-else-if="node.type === 'power'">
                     <eqn-edit :equationhtml="node.value"></eqn-edit><sup>{{ node.power }}</sup>
