@@ -165,6 +165,7 @@ export class FunctionGrapher {
             vertexShader: this.vShader,
             fragmentShader: fShader,
             side: FrontSide,
+            transparent: true,
         });
 
         this.renderer.setMaterial(this.material);
@@ -233,6 +234,7 @@ export class FunctionGrapher {
                 vec3 pt = ro + rd * (t_entry + float(numSteps) * stepsize);
 
                 float I = 0.0;
+                float a_total = 0.0;
 
                 for (int i = 0; i < numSteps; i++) {
                     // only process if inside the volume
@@ -249,6 +251,7 @@ export class FunctionGrapher {
                         if (delta <= R * magGrad) {
                             alpha = 1.0 - (delta / (R * magGrad));
                             alpha *= opacity;
+                            a_total += alpha;
                         }
 
                         vec3 normal = vec3(0.0);
@@ -265,7 +268,7 @@ export class FunctionGrapher {
                             // forward compositing (poor results)
                             // I += transparency * stepsize * alpha * abs(dot(normal, L));
                             // backward compositing
-                            I = I * ( 1.0 - alpha) + abs(dot(normal, L)) * alpha;
+                            I = I * (1.0 - alpha) + abs(dot(normal, L)) * alpha;
                         }
                     }
 
@@ -274,12 +277,7 @@ export class FunctionGrapher {
 
                 I = min(1.0, I * brightness);
 
-                if (I < 0.1) {
-                    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-                } else {
-                    gl_FragColor = vec4(I, I, I, 1.0);
-                }
-                gl_FragColor = vec4(I, I, I, 1.0);
+                gl_FragColor = vec4(I, I, I, a_total);
 
             }
         `;

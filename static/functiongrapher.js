@@ -104648,10 +104648,17 @@
 	TrackballControls.prototype.constructor = TrackballControls;
 
 	class Renderer {
-	    constructor(element) {
+	    constructor(element, options = {}) {
 	        this.element = element;
+
+	        this._xBounds = options.xBounds !== undefined ? options.xBounds : [-1, 1];
+	        this._yBounds = options.yBounds !== undefined ? options.yBounds : [-1, 1];
+	        this._zBounds = options.zBounds !== undefined ? options.zBounds : [-1, 1];
+
 	        this.initializeGL();
 	        this.initializeScene();
+	        this.createBoundingBox();
+	        this.createGraph();
 
 	        window.addEventListener('resize', () => {
 	            this.setSize(this.element.offsetWidth, this.element.offsetHeight);
@@ -104661,7 +104668,7 @@
 	    initializeGL() {
 	        try {
 	            this.renderer = new WebGLRenderer({
-	                preserveDrawingBuffer: true,
+	                alpha: true,
 	            });
 	        } catch (e) {
 	            throw new Error('Could not initialize WebGL');
@@ -104669,6 +104676,59 @@
 	        this.renderer.setClearColor(0x000000, 1);
 
 	        this.element.append(this.renderer.domElement);
+	    }
+
+	    setScale() {
+	        const xRange = this._xBounds[1] - this._xBounds[0];
+	        const yRange = this._yBounds[1] - this._yBounds[0];
+	        const zRange = this._zBounds[1] - this._zBounds[0];
+	    }
+
+	    createBoundingBox() {
+	        const bbGeom = new BufferGeometry();
+
+	        const positions = new Float32Array([
+	            -1, -1, -1,
+	            1, -1, -1,
+	            1, -1, 1,
+	            -1, -1, 1,
+
+	            -1, 1, -1,
+	            1, 1, -1,
+	            1, 1, 1,
+	            -1, 1, 1,
+	        ]);
+
+	        const index = new Uint16Array([
+	            0, 1,
+	            1, 2,
+	            2, 3,
+	            3, 0,
+
+	            4, 5,
+	            5, 6,
+	            6, 7,
+	            7, 4,
+
+	            0, 4,
+	            1, 5,
+	            2, 6,
+	            3, 7,
+	        ]);
+
+
+	        bbGeom.addAttribute('position', new BufferAttribute(positions, 3));
+	        bbGeom.setIndex(new BufferAttribute(index, 1));
+
+	        this.boundingBox = new LineSegments(bbGeom, new MeshBasicMaterial({ color: 0xffffff }));
+
+	        this.scene.add(this.boundingBox);
+	    }
+
+	    createGraph() {
+	        const boxGeom = new BoxBufferGeometry(2, 2, 2);
+	        this.box = new Mesh(boxGeom, new MeshBasicMaterial({ color: 0xff0000 }));
+	        this.scene.add(this.box);
 	    }
 
 	    initializeScene() {
@@ -104695,10 +104755,6 @@
 
 	        this.controls = controls;
 
-	        const boxGeom = new BoxBufferGeometry(2, 2, 2);
-	        this.box = new Mesh(boxGeom, new MeshBasicMaterial({ color: 0xff0000 }));
-	        this.scene.add(this.box);
-
 	        this.setSize(w, h);
 	    }
 
@@ -104718,9 +104774,39 @@
 	            if (this.controls !== undefined) {
 	                this.controls.update();
 	            }
+	            if (this._boundsNeedsUpdate) {
+	                this.updateBounds();
+	            }
 	            requestAnimationFrame(renderLoop);
 	        };
 	        requestAnimationFrame(renderLoop);
+	    }
+
+	    set xBounds(x) {
+	        this._xBounds = x;
+	        this._boundsNeedsUpdate = true;
+	    }
+
+	    get xBounds() {
+	        return this._xBounds;
+	    }
+
+	    set yBounds(y) {
+	        this._yBounds = y;
+	        this._boundsNeedsUpdate = true;
+	    }
+
+	    get yBounds() {
+	        return this._yBounds;
+	    }
+
+	    set zBounds(z) {
+	        this._zBounds = z;
+	        this._boundsNeedsUpdate = true;
+	    }
+
+	    get zBounds() {
+	        return this._zBounds;
 	    }
 	}
 
@@ -104884,6 +104970,7 @@
 	            vertexShader: this.vShader,
 	            fragmentShader: fShader,
 	            side: FrontSide,
+	            transparent: true,
 	        });
 
 	        this.renderer.setMaterial(this.material);
@@ -104952,6 +105039,7 @@
                 vec3 pt = ro + rd * (t_entry + float(numSteps) * stepsize);
 
                 float I = 0.0;
+                float a_total = 0.0;
 
                 for (int i = 0; i < numSteps; i++) {
                     // only process if inside the volume
@@ -104968,6 +105056,7 @@
                         if (delta <= R * magGrad) {
                             alpha = 1.0 - (delta / (R * magGrad));
                             alpha *= opacity;
+                            a_total += alpha;
                         }
 
                         vec3 normal = vec3(0.0);
@@ -104984,7 +105073,7 @@
                             // forward compositing (poor results)
                             // I += transparency * stepsize * alpha * abs(dot(normal, L));
                             // backward compositing
-                            I = I * ( 1.0 - alpha) + abs(dot(normal, L)) * alpha;
+                            I = I * (1.0 - alpha) + abs(dot(normal, L)) * alpha;
                         }
                     }
 
@@ -104993,12 +105082,7 @@
 
                 I = min(1.0, I * brightness);
 
-                if (I < 0.1) {
-                    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-                } else {
-                    gl_FragColor = vec4(I, I, I, 1.0);
-                }
-                gl_FragColor = vec4(I, I, I, 1.0);
+                gl_FragColor = vec4(I, I, I, a_total);
 
             }
         `;
