@@ -57419,13 +57419,88 @@
                 @value-changed="$emit('r-updated', $event)">
             </drag-number>
             <br>
-            X bounds: [<drag-number :initialvalue="xBounds[0]"></drag-number>, <drag-number :initialvalue="xBounds[1]"></drag-number>]
+            X bounds: [
+                <drag-number
+                    :resolution="0.02"
+                    :pixels-per-tick="5.0"
+                    :max="xBounds[1]"
+                    :initialvalue="xBounds[0]"
+                    @value-changed="setXBounds(0, $event)">
+                </drag-number>,
+                <drag-number
+                    :resolution="0.02"
+                    :pixels-per-tick="5.0"
+                    :min="xBounds[0]"
+                    :initialvalue="xBounds[1]"
+                    @value-changed="setXBounds(1, $event)">
+                </drag-number>
+            ]
             <br>
-            Y bounds: [<drag-number :initialvalue="yBounds[0]"></drag-number>, <drag-number :initialvalue="yBounds[1]"></drag-number>]
+            Y bounds: [
+                <drag-number
+                    :resolution="0.02"
+                    :pixels-per-tick="5.0"
+                    :max="yBounds[1]"
+                    :initialvalue="yBounds[0]"
+                    @value-changed="setYBounds(0, $event)">
+                </drag-number>,
+                <drag-number
+                    :resolution="0.02"
+                    :pixels-per-tick="5.0"
+                    :min="yBounds[0]"
+                    :initialvalue="yBounds[1]"
+                    @value-changed="setYBounds(1, $event)">
+                </drag-number>
+            ]
             <br>
-            Z bounds: [<drag-number :initialvalue="zBounds[0]"></drag-number>, <drag-number :initialvalue="zBounds[1]"></drag-number>]
+            Z bounds: [
+                <drag-number
+                    :resolution="0.02"
+                    :pixels-per-tick="5.0"
+                    :max="zBounds[1]"
+                    :initialvalue="zBounds[0]"
+                    @value-changed="setZBounds(0, $event)">
+                </drag-number>,
+                <drag-number
+                    :resolution="0.02"
+                    :pixels-per-tick="5.0"
+                    :min="zBounds[0]"
+                    :initialvalue="zBounds[1]"
+                    @value-changed="setZBounds(1, $event)">
+                </drag-number>
+            ]
         </div>
     `,
+	    methods: {
+	        setXBounds(which, val) {
+	            this.$set(this.xBounds, which, val.value);
+	        },
+	        setYBounds(which, val) {
+	            this.$set(this.yBounds, which, val.value);
+	        },
+	        setZBounds(which, val) {
+	            this.$set(this.zBounds, which, val.value);
+	        },
+	    },
+	    watch: {
+	        xBounds(val) {
+	            this.$emit('x-bounds-updated', {
+	                which: 'x',
+	                value: val,
+	            });
+	        },
+	        yBounds(val) {
+	            this.$emit('y-bounds-updated', {
+	                which: 'y',
+	                value: val,
+	            });
+	        },
+	        zBounds(val) {
+	            this.$emit('z-bounds-updated', {
+	                value: val,
+	            });
+	        },
+	    },
 	};
 
 	const dragNumber = {
@@ -104644,12 +104719,8 @@
 	TrackballControls.prototype.constructor = TrackballControls;
 
 	class Renderer {
-	    constructor(element, options = {}) {
+	    constructor(element) {
 	        this.element = element;
-
-	        this._xBounds = options.xBounds !== undefined ? options.xBounds : [-1, 1];
-	        this._yBounds = options.yBounds !== undefined ? options.yBounds : [-1, 1];
-	        this._zBounds = options.zBounds !== undefined ? options.zBounds : [-1, 1];
 
 	        this.initializeGL();
 	        this.initializeScene();
@@ -104674,10 +104745,9 @@
 	        this.element.append(this.renderer.domElement);
 	    }
 
-	    setScale() {
-	        const xRange = this._xBounds[1] - this._xBounds[0];
-	        const yRange = this._yBounds[1] - this._yBounds[0];
-	        const zRange = this._zBounds[1] - this._zBounds[0];
+	    setScale(x, y, z) {
+	        this.boundingBox.scale.set(x, y, z);
+	        this.box.scale.set(x, y, z);
 	    }
 
 	    createBoundingBox() {
@@ -104764,45 +104834,18 @@
 	        this.camera.updateProjectionMatrix();
 	    }
 
-	    go() {
+	    go(onRender = null) {
 	        const renderLoop = () => {
 	            this.renderer.render(this.scene, this.camera);
 	            if (this.controls !== undefined) {
 	                this.controls.update();
 	            }
-	            if (this._boundsNeedsUpdate) {
-	                this.updateBounds();
+	            if (onRender !== null) {
+	                onRender();
 	            }
 	            requestAnimationFrame(renderLoop);
 	        };
 	        requestAnimationFrame(renderLoop);
-	    }
-
-	    set xBounds(x) {
-	        this._xBounds = x;
-	        this._boundsNeedsUpdate = true;
-	    }
-
-	    get xBounds() {
-	        return this._xBounds;
-	    }
-
-	    set yBounds(y) {
-	        this._yBounds = y;
-	        this._boundsNeedsUpdate = true;
-	    }
-
-	    get yBounds() {
-	        return this._yBounds;
-	    }
-
-	    set zBounds(z) {
-	        this._zBounds = z;
-	        this._boundsNeedsUpdate = true;
-	    }
-
-	    get zBounds() {
-	        return this._zBounds;
 	    }
 	}
 
@@ -104811,12 +104854,10 @@
 	        this.renderer = new Renderer(element);
 
 	        this.vShader = `
-            varying vec4 vPosition;
-            varying vec3 vNormal;
+            varying vec3 vPosition;
             void main() {
-                vPosition = modelMatrix * vec4(position, 1.0);
-                vNormal = normal;
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                vPosition = (modelMatrix * vec4(position, 1.0)).xyz; // position in world coords
+                gl_Position = projectionMatrix * viewMatrix * vec4(vPosition, 1.0);
             }
         `;
 
@@ -104824,22 +104865,56 @@
 	        // ensure we don't render anything by default
 	        const defaultEqn = '100000.0';
 
+	        this._xBounds = [-1, 1];
+	        this._yBounds = [-1, 1];
+	        this._zBounds = [-1, 1];
+
 	        // stepsize * number of steps should be ~4 so we can view the whole plot along the diagonal
 	        this._stepsize = 0.012;
 	        this._R = 1;
 	        this._opacity = 1.0;
 	        this._brightness = 1.0;
 
-	        this._xBounds = [-1, 1];
-	        this._yBounds = [-1, 1];
-	        this._zBounds = [-1, 1];
-
 	        // Stepsize for sampling... 1 seems a good compromise between real-time shading and quality
 	        // on my MBP
 
 	        this.setEquation(defaultEqn, {});
 
-	        this.renderer.go();
+	        this._boundsNeedsUpdate = false;
+
+	        const onRender = () => {
+	            if (this._boundsNeedsUpdate) {
+	                this.updateBounds();
+	            }
+	        };
+
+	        this.renderer.go(onRender);
+	    }
+
+	    // Note that the domain will always be centered around the origin.
+	    // Requires bounds to be up to date
+	    computeDomain() {
+	        const xRange = this._xBounds[1] - this._xBounds[0];
+	        const yRange = this._yBounds[1] - this._yBounds[0];
+	        const zRange = this._zBounds[1] - this._zBounds[0];
+
+	        const maxRangeInv = 1.0 / Math.max(xRange, Math.max(yRange, zRange));
+
+	        const scaleX = xRange * maxRangeInv;
+	        const scaleY = yRange * maxRangeInv;
+	        const scaleZ = zRange * maxRangeInv;
+
+	        return [scaleX, scaleY, scaleZ];
+	    }
+
+	    updateBounds() {
+	        const scale = this.computeDomain();
+
+	        this.renderer.setScale(scale[0], scale[1], scale[2]);
+
+	        this.material.uniforms.domain.value.set(scale[0], scale[1], scale[2]);
+
+	        this._boundsNeedsUpdate = false;
 	    }
 
 	    set R(val) {
@@ -104880,7 +104955,8 @@
 
 	    set xBounds(val) {
 	        this._xBounds = val;
-	        this.material.uniforms.xBounds.set(val[0], val[1]);
+	        this.material.uniforms.xBounds.value.set(val[0], val[1]);
+	        this._boundsNeedsUpdate = true;
 	    }
 
 	    get xBounds() {
@@ -104889,7 +104965,8 @@
 
 	    set yBounds(val) {
 	        this._yBounds = val;
-	        this.material.uniforms.yBounds.set(val[0], val[1]);
+	        this.material.uniforms.yBounds.value.set(val[0], val[1]);
+	        this._boundsNeedsUpdate = true;
 	    }
 
 	    get yBounds() {
@@ -104898,7 +104975,8 @@
 
 	    set zBounds(val) {
 	        this._zBounds = val;
-	        this.material.uniforms.zBounds.set(val[0], val[1]);
+	        this.material.uniforms.zBounds.value.set(val[0], val[1]);
+	        this._boundsNeedsUpdate = true;
 	    }
 
 	    get zBounds() {
@@ -104941,6 +105019,7 @@
 	    // }
 
 	    setEquation(glsl, coeffs) {
+	        const domain = this.computeDomain();
 	        const uniforms = {
 	            stepsize: { type: 'f', value: this.stepsize },
 	            R: { type: 'f', value: this.R },
@@ -104950,6 +105029,8 @@
 	            xBounds: { type: 'v2', value: new Vector2(this.xBounds[0], this.xBounds[1]) },
 	            yBounds: { type: 'v2', value: new Vector2(this.yBounds[0], this.yBounds[1]) },
 	            zBounds: { type: 'v2', value: new Vector2(this.zBounds[0], this.zBounds[1]) },
+
+	            domain: { type: 'v3', value: new Vector3(domain[0], domain[1], domain[2]) },
 	        };
 
 	        Object.assign(uniforms, coeffs);
@@ -104984,7 +105065,8 @@
 	    static makeFragmentShader(eqn, extraUniforms = '') {
 	        /* eslint-disable indent, max-len */
 	        const fShader = `
-            varying vec4 vPosition;
+            varying vec3 rawPosition;
+            varying vec3 vPosition;
             uniform float stepsize;
             uniform float R;
             uniform float opacity;
@@ -104992,22 +105074,27 @@
             uniform vec2 xBounds;
             uniform vec2 yBounds;
             uniform vec2 zBounds;
+            uniform vec3 domain;
 
             const int numSteps = 300;
             ${extraUniforms}
             // Describe ROI as a sphere later?
 
-            float fn(float x, float y, float z) {
+            float fn(vec3 pt, vec3 halfDomainInv) {
+                vec3 uvw = ((pt + domain) * halfDomainInv);
+                float x = uvw.x * (xBounds.y - xBounds.x) + xBounds.x;
+                float y = uvw.y * (yBounds.y - yBounds.x) + yBounds.x;
+                float z = uvw.z * (zBounds.y - zBounds.x) + zBounds.x;
                 return ${eqn};
             }
 
-            vec3 grad(vec3 pt, float size) {
-                float right = fn(pt.x + size, pt.y, pt.z);
-                float left = fn(pt.x - size, pt.y, pt.z);
-                float up = fn(pt.x, pt.y + size, pt.z);
-                float down = fn(pt.x, pt.y - size, pt.z);
-                float front = fn(pt.x, pt.y, pt.z + size);
-                float back = fn(pt.x, pt.y, pt.z - size);
+            vec3 grad(vec3 pt, float size, vec3 halfDomainInv) {
+                float right = fn(vec3(pt.x + size, pt.y, pt.z), halfDomainInv);
+                float left = fn(vec3(pt.x - size, pt.y, pt.z), halfDomainInv);
+                float up = fn(vec3(pt.x, pt.y + size, pt.z), halfDomainInv);
+                float down = fn(vec3(pt.x, pt.y - size, pt.z), halfDomainInv);
+                float front = fn(vec3(pt.x, pt.y, pt.z + size), halfDomainInv);
+                float back = fn(vec3(pt.x, pt.y, pt.z - size), halfDomainInv);
 
                 return vec3(0.5 * (right - left), 0.5 * up - down, 0.5 * front - back);
             }
@@ -105019,9 +105106,10 @@
 
             void main() {
                 vec3 ro = cameraPosition;
-                vec3 dir = vPosition.xyz - ro;
+                vec3 dir = vPosition - ro;
                 float t_entry = length(dir);
                 vec3 rd = normalize(dir);
+                vec3 halfDomainInv = 0.5 / domain;
 
                 vec3 lightPosition = cameraPosition;
                 float isoval = 0.0;
@@ -105039,10 +105127,11 @@
 
                 for (int i = 0; i < numSteps; i++) {
                     // only process if inside the volume
-                    if (pt.z >= zBounds.x && pt.z <= zBounds.y && pt.x >= xBounds.x && pt.x <= xBounds.y && pt.y <= yBounds.y && pt.y >= yBounds.x) {
+                    if (pt.z >= -domain.z && pt.z <= domain.z && pt.x >= -domain.x && pt.x <= domain.x && pt.y <= domain.y && pt.y >= -domain.y) {
+
                         // plot outline
-                        float value = fn(pt.x, pt.y, pt.z);
-                        vec3 grad = grad(pt, stepsize);
+                        float value = fn(pt, halfDomainInv);
+                        vec3 grad = grad(pt, stepsize, halfDomainInv);
                         float alpha = 0.0;
 
                         float delta = abs(isoval - value);
@@ -105130,6 +105219,15 @@
 	        },
 	        setR(r) {
 	            this.fg.R = r;
+	        },
+	        setXBounds(x) {
+	            this.fg.xBounds = x;
+	        },
+	        setYBounds(y) {
+	            this.fg.yBounds = y;
+	        },
+	        setZBounds(z) {
+	            this.fg.zBounds = z;
 	        },
 	        computeGLSL(eqn, uniforms) {
 	            let glsl = '';

@@ -35,6 +35,15 @@ export const mainGraph = {
         setR(r) {
             this.fg.R = r;
         },
+        setXBounds(x) {
+            this.fg.xBounds = x;
+        },
+        setYBounds(y) {
+            this.fg.yBounds = y;
+        },
+        setZBounds(z) {
+            this.fg.zBounds = z;
+        },
         computeGLSL(eqn, uniforms) {
             let glsl = '';
             for (const node of eqn) {

@@ -13,12 +13,8 @@ import {
 import { TrackballControls } from './lib/TrackballControls';
 
 export class Renderer {
-    constructor(element, options = {}) {
+    constructor(element) {
         this.element = element;
-
-        this._xBounds = options.xBounds !== undefined ? options.xBounds : [-1, 1];
-        this._yBounds = options.yBounds !== undefined ? options.yBounds : [-1, 1];
-        this._zBounds = options.zBounds !== undefined ? options.zBounds : [-1, 1];
 
         this.initializeGL();
         this.initializeScene();
@@ -43,16 +39,9 @@ export class Renderer {
         this.element.append(this.renderer.domElement);
     }
 
-    setScale() {
-        const xRange = this._xBounds[1] - this._xBounds[0];
-        const yRange = this._yBounds[1] - this._yBounds[0];
-        const zRange = this._zBounds[1] - this._zBounds[0];
-
-        const halfMaxRangeInv = 1.0 / (2.0 * Math.max(xRange, Math.max(yRange, zRange)));
-
-        const adjustedX = [-xRange * halfMaxRangeInv, xRange * halfMaxRangeInv];
-        const adjustedY = [-yRange * halfMaxRangeInv, yRange * halfMaxRangeInv];
-        const adjustedZ = [-zRange * halfMaxRangeInv, zRange * halfMaxRangeInv];
+    setScale(x, y, z) {
+        this.boundingBox.scale.set(x, y, z);
+        this.box.scale.set(x, y, z);
     }
 
     createBoundingBox() {
@@ -139,44 +128,17 @@ export class Renderer {
         this.camera.updateProjectionMatrix();
     }
 
-    go() {
+    go(onRender = null) {
         const renderLoop = () => {
             this.renderer.render(this.scene, this.camera);
             if (this.controls !== undefined) {
                 this.controls.update();
             }
-            if (this._boundsNeedsUpdate) {
-                this.updateBounds();
+            if (onRender !== null) {
+                onRender();
             }
             requestAnimationFrame(renderLoop);
         };
         requestAnimationFrame(renderLoop);
-    }
-
-    set xBounds(x) {
-        this._xBounds = x;
-        this._boundsNeedsUpdate = true;
-    }
-
-    get xBounds() {
-        return this._xBounds;
-    }
-
-    set yBounds(y) {
-        this._yBounds = y;
-        this._boundsNeedsUpdate = true;
-    }
-
-    get yBounds() {
-        return this._yBounds;
-    }
-
-    set zBounds(z) {
-        this._zBounds = z;
-        this._boundsNeedsUpdate = true;
-    }
-
-    get zBounds() {
-        return this._zBounds;
     }
 }

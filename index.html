@@ -32,7 +32,10 @@ title: Michael Firmin
       v-if="state === 'graphing'"
       @opacity-updated="opacityUpdated"
       @brightness-updated="brightnessUpdated"
-      @r-updated="rUpdated">
+      @r-updated="rUpdated"
+      @x-bounds-updated="xBoundsUpdated"
+      @y-bounds-updated="yBoundsUpdated"
+      @z-bounds-updated="zBoundsUpdated">
     </controls>
   </div>
   <!--
@@ -409,6 +412,15 @@ title: Michael Firmin
         },
         brightnessUpdated: function(val) {
           this.$refs.main.setBrightness(val.value);
+        },
+        xBoundsUpdated: function(val) {
+          this.$refs.main.setXBounds(val.value);
+        },
+        yBoundsUpdated: function(val) {
+          this.$refs.main.setYBounds(val.value);
+        },
+        zBoundsUpdated: function(val) {
+          this.$refs.main.setZBounds(val.value);
         },
       },
       computed: {

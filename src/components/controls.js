@@ -40,11 +40,86 @@ export const controls = {
                 @value-changed="$emit('r-updated', $event)">
             </drag-number>
             <br>
-            X bounds: [<drag-number :initialvalue="xBounds[0]"></drag-number>, <drag-number :initialvalue="xBounds[1]"></drag-number>]
+            X bounds: [
+                <drag-number
+                    :resolution="0.02"
+                    :pixels-per-tick="5.0"
+                    :max="xBounds[1]"
+                    :initialvalue="xBounds[0]"
+                    @value-changed="setXBounds(0, $event)">
+                </drag-number>,
+                <drag-number
+                    :resolution="0.02"
+                    :pixels-per-tick="5.0"
+                    :min="xBounds[0]"
+                    :initialvalue="xBounds[1]"
+                    @value-changed="setXBounds(1, $event)">
+                </drag-number>
+            ]
             <br>
-            Y bounds: [<drag-number :initialvalue="yBounds[0]"></drag-number>, <drag-number :initialvalue="yBounds[1]"></drag-number>]
+            Y bounds: [
+                <drag-number
+                    :resolution="0.02"
+                    :pixels-per-tick="5.0"
+                    :max="yBounds[1]"
+                    :initialvalue="yBounds[0]"
+                    @value-changed="setYBounds(0, $event)">
+                </drag-number>,
+                <drag-number
+                    :resolution="0.02"
+                    :pixels-per-tick="5.0"
+                    :min="yBounds[0]"
+                    :initialvalue="yBounds[1]"
+                    @value-changed="setYBounds(1, $event)">
+                </drag-number>
+            ]
             <br>
-            Z bounds: [<drag-number :initialvalue="zBounds[0]"></drag-number>, <drag-number :initialvalue="zBounds[1]"></drag-number>]
+            Z bounds: [
+                <drag-number
+                    :resolution="0.02"
+                    :pixels-per-tick="5.0"
+                    :max="zBounds[1]"
+                    :initialvalue="zBounds[0]"
+                    @value-changed="setZBounds(0, $event)">
+                </drag-number>,
+                <drag-number
+                    :resolution="0.02"
+                    :pixels-per-tick="5.0"
+                    :min="zBounds[0]"
+                    :initialvalue="zBounds[1]"
+                    @value-changed="setZBounds(1, $event)">
+                </drag-number>
+            ]
         </div>
     `,
+    methods: {
+        setXBounds(which, val) {
+            this.$set(this.xBounds, which, val.value);
+        },
+        setYBounds(which, val) {
+            this.$set(this.yBounds, which, val.value);
+        },
+        setZBounds(which, val) {
+            this.$set(this.zBounds, which, val.value);
+        },
+    },
+    watch: {
+        xBounds(val) {
+            this.$emit('x-bounds-updated', {
+                which: 'x',
+                value: val,
+            });
+        },
+        yBounds(val) {
+            this.$emit('y-bounds-updated', {
+                which: 'y',
+                value: val,
+            });
+        },
+        zBounds(val) {
+            this.$emit('z-bounds-updated', {
+                value: val,
+            });
+        },
+    },
 };
