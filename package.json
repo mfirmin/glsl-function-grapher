@@ -21,9 +21,13 @@
     "mocha": "*",
     "rollup": "*",
     "rollup-plugin-node-globals": "^1.2.1",
-    "rollup-plugin-node-resolve": "^3.3.0"
+    "rollup-plugin-node-resolve": "^3.3.0",
+    "rollup-plugin-commonjs": "*",
+    "rollup-plugin-replace": "*"
   },
   "dependencies": {
-    "mathjs": "^5.0.4"
+    "mathjs": "^5.0.4",
+    "vue": "^2.5.16",
+    "vuetify": "^1.1.9"
   }
 }

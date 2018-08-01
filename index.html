@@ -8,7 +8,6 @@ title: Michael Firmin
     <title>GLSL 3D Function Grapher</title>
 
     <link rel="stylesheet" type="text/css" href="css/functiongrapher.css">
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="static/functiongrapher.js"></script>
   </head>
 <body>
@@ -138,12 +137,6 @@ title: Michael Firmin
     </script>
     -->
   <script>
-    Vue.component('eqn-input', FG.components.eqnInput);
-    Vue.component('eqn-edit', FG.components.eqnEdit);
-    Vue.component('main-graph', FG.components.mainGraph);
-    Vue.component('drag-number', FG.components.dragNumber);
-    Vue.component('controls', FG.components.controls);
-
     // Mapping of method name to glsl equivalent
     const validFunctions = {
       abs: {
@@ -349,7 +342,7 @@ title: Michael Firmin
       }
     }
 
-    const app = new Vue({
+    const app = new FG.lib.Vue({
       el: '#app',
       data: {
         state: 'initial', // or 'graphing'

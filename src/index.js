@@ -1,9 +1,12 @@
 import * as math from 'mathjs';
-import { components } from './components/index';
+import './components/index';
+import Vue from 'vue/dist/vue';
 
 const FG = {
-    components,
     math: math.default,
+    lib: {
+        Vue,
+    },
 };
 
 export default FG;

@@ -1,4 +1,6 @@
-export const eqnEdit = {
+import Vue from 'vue/dist/vue.js';
+
+Vue.component('eqn-edit', {
     props: ['equationhtml'],
     data() {
         return {
@@ -33,4 +35,4 @@ export const eqnEdit = {
             this.$emit('coefficient-changed', val);
         },
     },
-};
+});

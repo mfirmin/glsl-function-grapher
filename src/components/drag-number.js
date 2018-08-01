@@ -1,4 +1,6 @@
-export const dragNumber = {
+import Vue from 'vue/dist/vue.js';
+
+Vue.component('drag-number', {
     props: {
         initialvalue: {
             type: Number,
@@ -122,4 +124,4 @@ export const dragNumber = {
             });
         },
     },
-};
+});

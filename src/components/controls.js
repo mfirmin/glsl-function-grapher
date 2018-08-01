@@ -1,4 +1,6 @@
-export const controls = {
+import Vue from 'vue/dist/vue.js';
+
+Vue.component('controls', {
     data() {
         return {
             opaque: 1,
@@ -122,4 +124,5 @@ export const controls = {
             });
         },
     },
-};
+});
+

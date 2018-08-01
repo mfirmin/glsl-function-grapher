@@ -1,5 +1,7 @@
-export const eqnInput = {
-    data: function () {
+import Vue from 'vue/dist/vue.js';
+
+Vue.component('eqn-input', {
+    data() {
         return {
             equation: '',
             styleObject: {
@@ -17,10 +19,10 @@ export const eqnInput = {
         </span>
     `,
     methods: {
-        graph: function() {
+        graph() {
             this.$emit('graph', {
                 newEquation: this.equation,
             });
         },
     },
-};
+});

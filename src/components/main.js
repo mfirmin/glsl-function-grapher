@@ -1,6 +1,7 @@
+import Vue from 'vue/dist/vue';
 import { FunctionGrapher } from '../functionGrapher';
 
-export const mainGraph = {
+Vue.component('main-graph', {
     data() {
         return {
             fg: null,
@@ -66,7 +67,6 @@ export const mainGraph = {
             return glsl;
         },
         setEquation(eqn) {
-            console.log(eqn);
             const uniforms = {};
             const glsl = this.computeGLSL(eqn, uniforms);
 
@@ -76,4 +76,4 @@ export const mainGraph = {
             this.fg.updateCoefficient(id, value);
         },
     },
-};
+});
