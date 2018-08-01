@@ -1,3 +1,7 @@
+body {
+    background-color: #ccc
+}
+
 .constant {
     color: green;
 }
@@ -8,7 +12,7 @@
 
 .drag-number {
     text-decoration: underline; 
-    color: #00eea0;
+    color: #080;
 }
 
 .help {
@@ -29,5 +33,4 @@
     transition: visibility;
     transition-delay: 0.5s;
 }
-
 

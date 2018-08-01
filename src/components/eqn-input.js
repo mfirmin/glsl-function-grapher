@@ -1,4 +1,4 @@
-import Vue from 'vue/dist/vue.js';
+import Vue from 'vue/dist/vue';
 
 Vue.component('eqn-input', {
     data() {
@@ -8,6 +8,7 @@ Vue.component('eqn-input', {
                 width: '50vw',
                 height: '30px',
                 'font-size': 'large',
+                'background-color': '#eee',
             },
         };
     },

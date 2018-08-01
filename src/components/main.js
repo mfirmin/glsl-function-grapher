@@ -6,14 +6,15 @@ Vue.component('main-graph', {
         return {
             fg: null,
             outerStyle: {
-                border: '1px solid black',
                 width: '50vw',
                 height: '75vh',
+                'box-shadow': '1px 1px 1px grey',
+                'border-radius': '5px',
             },
             innerStyle: {
-                margin: '5px 5px 5px 5px',
-                width: 'calc(100% - 10px)',
-                height: 'calc(100% - 10px)',
+                width: '100%',
+                height: '100%',
+                'border-radius': '2px',
             },
         };
     },

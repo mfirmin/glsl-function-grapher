@@ -10,6 +10,9 @@ Vue.component('controls', {
             styleObject: {
                 border: '1px solid black',
                 width: '200px',
+                'background-color': '#e4e4e4',
+                'box-shadow': '2px 2px 1px grey',
+                'border-radius': '1px',
             },
         };
     },
@@ -45,7 +48,7 @@ Vue.component('controls', {
                 <v-icon
                     small
                     slot="activator"
-                    :style="{ color: 'lightgrey' }"
+                    :style="{ color: '#555' }"
                     >help
                 </v-icon>
                 <span class="tooltip">
