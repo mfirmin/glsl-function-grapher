@@ -10,3 +10,24 @@
     text-decoration: underline; 
     color: #00eea0;
 }
+
+.help {
+    overflow: visible;
+}
+
+.help .tooltip {
+    visibility: hidden;
+    position: absolute;
+    min-width: 200px;
+    background-color: lightblue;
+    border: 1px solid black;
+    padding: 2px;
+}
+
+.help:hover .tooltip {
+    visibility: visible;
+    transition: visibility;
+    transition-delay: 0.5s;
+}
+
+

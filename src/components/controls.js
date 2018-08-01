@@ -1,4 +1,4 @@
-import Vue from 'vue/dist/vue.js';
+import Vue from 'vue/dist/vue';
 
 Vue.component('controls', {
     data() {
@@ -33,7 +33,7 @@ Vue.component('controls', {
                 @value-changed="$emit('brightness-updated', $event)">
             </drag-number>
             <br>
-            R: <drag-number
+            Sharpness: <drag-number
                 :initialvalue="1.0"
                 :resolution="0.02"
                 :pixels-per-tick="5.0"
@@ -41,6 +41,19 @@ Vue.component('controls', {
                 :max="2.0"
                 @value-changed="$emit('r-updated', $event)">
             </drag-number>
+            <span class="help">
+                <v-icon
+                    small
+                    slot="activator"
+                    :style="{ color: 'lightgrey' }"
+                    >help
+                </v-icon>
+                <span class="tooltip">
+                    Adjusts the "sharpness" of the render.
+                    Lower values produce a sharper image, but lead to rendering artefacts.
+                    Higher values will produce a blurrier image.
+                </span>
+            </span>
             <br>
             X bounds: [
                 <drag-number
