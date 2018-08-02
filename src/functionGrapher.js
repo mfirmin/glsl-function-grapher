@@ -291,18 +291,20 @@ export class FunctionGrapher {
                 // Start at the far end and work our way back to the entry point
                 // (back compositing)
                 vec3 pt = ro + rd * (t_entry + float(numSteps) * stepsize);
+                vec3 pt_plot = pt.xzy;
 
                 vec3 I = vec3(0.0);
                 float a_total = 0.0;
 
                 for (int i = 0; i < numSteps; i++) {
                     // only process if inside the volume
-                    if (pt.z >= -domain.z && pt.z <= domain.z && pt.x >= -domain.x && pt.x <= domain.x && pt.y <= domain.y && pt.y >= -domain.y) {
-                        vec3 uvw = ((pt + domain) * halfDomainInv);
+                    if (pt_plot.z >= -domain.z && pt_plot.z <= domain.z && pt_plot.x >= -domain.x && pt_plot.x <= domain.x && pt_plot.y <= domain.y && pt_plot.y >= -domain.y) {
+                        vec3 uvw = ((pt_plot + domain) * halfDomainInv);
 
                         // plot outline
-                        float value = fn(pt, halfDomainInv);
-                        vec3 grad = grad(pt, stepsize, halfDomainInv);
+                        // function evaluations are in plot space (swap z, y)
+                        float value = fn(pt_plot, halfDomainInv);
+                        vec3 grad = grad(pt_plot, stepsize, halfDomainInv);
                         float alpha = 0.0;
 
                         float delta = abs(isoval - value);
@@ -319,11 +321,12 @@ export class FunctionGrapher {
                         if (magGrad > 0.0) {
                             normal = vec3(grad / magGrad);
                         }
-                        if (dot(normal, cameraPosition - pt) < 0.0) {
+                        // lighting should be in world space
+                        if (dot(normal, cameraPosition.xzy - pt_plot) < 0.0) {
                             normal = -normal;
                         }
 
-                        vec3 L = normalize(lightPosition - pt);
+                        vec3 L = normalize(lightPosition.xzy - pt_plot);
 
                         if (dot(normal, L) > 0.0) {
                             // forward compositing (poor results)
@@ -335,6 +338,7 @@ export class FunctionGrapher {
                     }
 
                     pt -= rskip;
+                    pt_plot = pt.xzy;
                 }
 
                 I.r = min(1.0, I.r * brightness);

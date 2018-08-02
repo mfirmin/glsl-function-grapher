@@ -50,30 +50,32 @@ export class Renderer {
 
     setScale(x, y, z) {
         this._scale = [x, y, z];
-        this.xAxis.scale.set(1, y, z);
-        this.yAxis.scale.set(x, 1, z);
-        this.zAxis.scale.set(x, y, 1);
+        this.xAxis.scale.set(1, z, y);
+        this.yAxis.scale.set(x, z, 1);
+        this.zAxis.scale.set(x, 1, y);
 
-        this.box.scale.set(x, y, z);
+        this.box.scale.set(x, z, y);
     }
 
     updateAxes() {
         const cameraPosition = this.camera.position;
+
         const x = cameraPosition.x < 0 ? this._scale[0] : -this._scale[0];
-        const y = cameraPosition.y < 0 ? this._scale[1] : -this._scale[1];
-        const z = cameraPosition.z < 0 ? this._scale[2] : -this._scale[2];
+        const y = cameraPosition.z < 0 ? this._scale[1] : -this._scale[1];
+        const z = cameraPosition.y < 0 ? this._scale[2] : -this._scale[2];
+
         this.xAxis.position.x = x;
-        this.yAxis.position.y = y;
-        this.zAxis.position.z = z;
+        this.yAxis.position.z = y;
+        this.zAxis.position.y = z;
 
-        this.xLabel.geometry.attributes.offset.array[1] = y + 0.1 * Math.sign(y);
-        this.xLabel.geometry.attributes.offset.array[2] = -z + 0.1 * -Math.sign(z);
+        this.xLabel.geometry.attributes.offset.array[1] = z + 0.1 * Math.sign(z);
+        this.xLabel.geometry.attributes.offset.array[2] = -y + 0.1 * -Math.sign(y);
 
-        this.xLabel.geometry.attributes.offset.array[3] = x + 0.1 * Math.sign(x);
-        this.xLabel.geometry.attributes.offset.array[5] = -z + 0.1 * -Math.sign(z);
+        this.xLabel.geometry.attributes.offset.array[3] = -x + 0.1 * -Math.sign(x);
+        this.xLabel.geometry.attributes.offset.array[4] = z + 0.1 * Math.sign(z);
 
-        this.xLabel.geometry.attributes.offset.array[6] = -x + 0.1 * -Math.sign(x);
-        this.xLabel.geometry.attributes.offset.array[7] = y + 0.1 * Math.sign(y);
+        this.xLabel.geometry.attributes.offset.array[6] = x + 0.1 * Math.sign(x);
+        this.xLabel.geometry.attributes.offset.array[8] = -y + 0.1 * -Math.sign(y);
 
         this.xLabel.geometry.attributes.offset.needsUpdate = true;
     }
@@ -137,8 +139,8 @@ export class Renderer {
         xLabelGeom.addAttribute('position', new BufferAttribute(labelPositions, 3));
         xLabelGeom.addAttribute('offset', new InstancedBufferAttribute(new Float32Array([
             0, -1.1, 1.1,
-            -1.1, 0, 1.1,
             1.1, -1.1, 0,
+            -1.1, 0, 1.1,
         ]), 3, 1));
         xLabelGeom.addAttribute('fontRatio', new InstancedBufferAttribute(new Float32Array([
             xWidth / textHeight,
@@ -252,13 +254,13 @@ export class Renderer {
         const yAxisPositions = new Float32Array(xAxisPositions.length);
         const zAxisPositions = new Float32Array(xAxisPositions.length);
         for (let i = 0; i < xAxisPositions.length; i += 3) {
-            yAxisPositions[i + 0] = xAxisPositions[i + 1];
-            yAxisPositions[i + 1] = xAxisPositions[i + 0];
-            yAxisPositions[i + 2] = xAxisPositions[i + 2];
+            yAxisPositions[i + 0] = xAxisPositions[i + 2];
+            yAxisPositions[i + 1] = xAxisPositions[i + 1];
+            yAxisPositions[i + 2] = xAxisPositions[i + 0];
 
-            zAxisPositions[i + 0] = xAxisPositions[i + 2];
-            zAxisPositions[i + 1] = xAxisPositions[i + 1];
-            zAxisPositions[i + 2] = xAxisPositions[i + 0];
+            zAxisPositions[i + 0] = xAxisPositions[i + 1];
+            zAxisPositions[i + 1] = xAxisPositions[i + 0];
+            zAxisPositions[i + 2] = xAxisPositions[i + 2];
         }
 
 
