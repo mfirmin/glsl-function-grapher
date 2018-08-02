@@ -31,6 +31,7 @@ title: Michael Firmin
       :style="controlsStyle"
       v-if="state === 'graphing'"
       @opacity-updated="opacityUpdated"
+      @greyscale-updated="greyscaleUpdated"
       @brightness-updated="brightnessUpdated"
       @r-updated="rUpdated"
       @x-bounds-updated="xBoundsUpdated"
@@ -400,6 +401,9 @@ title: Michael Firmin
         },
         opacityUpdated: function(val) {
           this.$refs.main.setOpacity(val.value);
+        },
+        greyscaleUpdated: function(val) {
+          this.$refs.main.setGreyscale(val);
         },
         rUpdated: function(val) {
           this.$refs.main.setR(val.value);

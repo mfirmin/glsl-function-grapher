@@ -31,6 +31,9 @@ Vue.component('main-graph', {
         setOpacity(o) {
             this.fg.opacity = o;
         },
+        setGreyscale(g) {
+            this.fg.greyscale = g;
+        },
         setBrightness(b) {
             this.fg.brightness = b;
         },

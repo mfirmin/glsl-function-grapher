@@ -31,6 +31,7 @@ export class FunctionGrapher {
         this._R = 1;
         this._opacity = 1.0;
         this._brightness = 1.0;
+        this._greyscale = 1.0;
 
         // Stepsize for sampling... 1 seems a good compromise between real-time shading and quality
         // on my MBP
@@ -81,6 +82,15 @@ export class FunctionGrapher {
 
     get R() {
         return this._R;
+    }
+
+    set greyscale(val) {
+        this._greyscale = +val;
+        this.material.uniforms.greyscale.value = +val;
+    }
+
+    get greyscale() {
+        return this._greyscale > 0.5;
     }
 
     set brightness(val) {
@@ -178,10 +188,12 @@ export class FunctionGrapher {
     setEquation(glsl, coeffs) {
         const domain = this.computeDomain();
         const uniforms = {
-            stepsize: { type: 'f', value: this.stepsize },
-            R: { type: 'f', value: this.R },
-            brightness: { type: 'f', value: this.brightness },
-            opacity: { type: 'f', value: this.opacity },
+            stepsize: { type: 'f', value: this._stepsize },
+            R: { type: 'f', value: this._R },
+            brightness: { type: 'f', value: this._brightness },
+            opacity: { type: 'f', value: this._opacity },
+
+            greyscale: { type: 'f', value: this._greyscale },
 
             xBounds: { type: 'v2', value: new Vector2(this.xBounds[0], this.xBounds[1]) },
             yBounds: { type: 'v2', value: new Vector2(this.yBounds[0], this.yBounds[1]) },
@@ -228,6 +240,7 @@ export class FunctionGrapher {
             uniform float R;
             uniform float opacity;
             uniform float brightness;
+            uniform float greyscale;
             uniform vec2 xBounds;
             uniform vec2 yBounds;
             uniform vec2 zBounds;
@@ -279,12 +292,13 @@ export class FunctionGrapher {
                 // (back compositing)
                 vec3 pt = ro + rd * (t_entry + float(numSteps) * stepsize);
 
-                float I = 0.0;
+                vec3 I = vec3(0.0);
                 float a_total = 0.0;
 
                 for (int i = 0; i < numSteps; i++) {
                     // only process if inside the volume
                     if (pt.z >= -domain.z && pt.z <= domain.z && pt.x >= -domain.x && pt.x <= domain.x && pt.y <= domain.y && pt.y >= -domain.y) {
+                        vec3 uvw = ((pt + domain) * halfDomainInv);
 
                         // plot outline
                         float value = fn(pt, halfDomainInv);
@@ -315,16 +329,19 @@ export class FunctionGrapher {
                             // forward compositing (poor results)
                             // I += transparency * stepsize * alpha * abs(dot(normal, L));
                             // backward compositing
-                            I = I * (1.0 - alpha) + abs(dot(normal, L)) * alpha;
+                            vec3 color = greyscale > 0.5 ? vec3(1.0) : uvw;
+                            I = I * (1.0 - alpha) + abs(dot(normal, L)) * color * alpha;
                         }
                     }
 
                     pt -= rskip;
                 }
 
-                I = min(1.0, I * brightness);
+                I.r = min(1.0, I.r * brightness);
+                I.g = min(1.0, I.g * brightness);
+                I.b = min(1.0, I.b * brightness);
 
-                gl_FragColor = vec4(I, I, I, a_total);
+                gl_FragColor = vec4(I, a_total);
 
             }
         `;

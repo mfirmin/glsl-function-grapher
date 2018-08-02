@@ -18,6 +18,8 @@ Vue.component('controls', {
     },
     template: `
         <div :style="styleObject">
+            Greyscale: <input type="checkbox" checked @input="$emit('greyscale-updated', $event.target.checked)">
+            <br>
             Opacity: <drag-number
                 :initialvalue="1.0"
                 :resolution="0.01"
@@ -141,4 +143,3 @@ Vue.component('controls', {
         },
     },
 });
-
