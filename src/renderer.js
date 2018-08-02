@@ -2,11 +2,16 @@ import {
     BoxBufferGeometry,
     BufferAttribute,
     BufferGeometry,
+    CanvasTexture,
+    InstancedBufferAttribute,
+    InstancedBufferGeometry,
     LineSegments,
     Mesh,
     MeshBasicMaterial,
     PerspectiveCamera,
     Scene,
+    ShaderMaterial,
+    Vector2,
     VertexColors,
     WebGLRenderer,
 } from './lib/three.module';
@@ -22,6 +27,7 @@ export class Renderer {
         this.initializeGL();
         this.initializeScene();
         this.createBoundingBox();
+        this.createAxisLabels();
         this.createGraph();
 
         window.addEventListener('resize', () => {
@@ -59,6 +65,136 @@ export class Renderer {
         this.xAxis.position.x = x;
         this.yAxis.position.y = y;
         this.zAxis.position.z = z;
+
+        this.xLabel.geometry.attributes.offset.array[1] = y + 0.1 * Math.sign(y);
+        this.xLabel.geometry.attributes.offset.array[2] = -z + 0.1 * -Math.sign(z);
+
+        this.xLabel.geometry.attributes.offset.array[3] = x + 0.1 * Math.sign(x);
+        this.xLabel.geometry.attributes.offset.array[5] = -z + 0.1 * -Math.sign(z);
+
+        this.xLabel.geometry.attributes.offset.array[6] = -x + 0.1 * -Math.sign(x);
+        this.xLabel.geometry.attributes.offset.array[7] = y + 0.1 * Math.sign(y);
+
+        this.xLabel.geometry.attributes.offset.needsUpdate = true;
+    }
+
+    createAxisLabels() {
+        const canvasWidth = 128;
+        const canvasHeight = 128;
+        const textHeight = 30;
+        const fontSize = 30;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        const context = canvas.getContext('2d');
+        context.textBaseline = 'bottom';
+        context.fillStyle = 'white';
+
+        context.font = `${textHeight}px Arial`;
+        const xWidth = context.measureText('X').width;
+        const yWidth = context.measureText('Y').width;
+        const zWidth = context.measureText('Z').width;
+
+        context.fillText('X', 0, 1.0 * textHeight);
+        context.fillText('Y', 0, 2.0 * textHeight);
+        context.fillText('Z', 0, 3.0 * textHeight);
+
+        const resolution = [this.element.offsetWidth, this.element.offsetHeight];
+
+        const labelPositions = new Float32Array([
+            -1, -1, 0,
+            1, -1, 0,
+            1, 1, 0,
+            -1, -1, 0,
+            1, 1, 0,
+            -1, 1, 0,
+        ]);
+
+        const uv = new Float32Array([
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 0,
+            1, 1,
+            0, 1,
+        ]);
+
+        const uX = xWidth / canvasWidth;
+        const uY = yWidth / canvasWidth;
+        const uZ = zWidth / canvasWidth;
+        const vX = 1 - (textHeight / canvasHeight);
+        const vY = 1 - 2 * (textHeight / canvasHeight);
+        const vZ = 1 - 3 * (textHeight / canvasHeight);
+
+        const iUv = new Float32Array([
+            0, vX, uX, 1,
+            0, vY, uY, vX,
+            0, vZ, uZ, vY,
+        ]);
+
+        const xLabelGeom = new InstancedBufferGeometry();
+        xLabelGeom.addAttribute('position', new BufferAttribute(labelPositions, 3));
+        xLabelGeom.addAttribute('offset', new InstancedBufferAttribute(new Float32Array([
+            0, -1.1, 1.1,
+            -1.1, 0, 1.1,
+            1.1, -1.1, 0,
+        ]), 3, 1));
+        xLabelGeom.addAttribute('fontRatio', new InstancedBufferAttribute(new Float32Array([
+            xWidth / textHeight,
+            yWidth / textHeight,
+            zWidth / textHeight,
+        ]), 1, 1));
+        xLabelGeom.addAttribute('uv', new BufferAttribute(uv, 2));
+        xLabelGeom.addAttribute('iUv', new InstancedBufferAttribute(iUv, 4, 1));
+
+        xLabelGeom.maxInstancedCount = 3;
+
+        const material = new ShaderMaterial({
+            uniforms: {
+                fontSize: { type: 'f', value: fontSize },
+                resolution: { type: 'v2', value: new Vector2(resolution[0], resolution[1]) },
+                map: { type: 't', value: new CanvasTexture(canvas) },
+            },
+            vertexShader: `
+                attribute vec3 offset;
+                attribute vec4 iUv;
+                attribute float fontRatio;
+
+                uniform vec2 resolution;
+                uniform float fontSize;
+
+                varying vec2 vUv;
+
+                void main() {
+                    vUv.x = mix(iUv.x, iUv.z, uv.x);
+                    vUv.y = mix(iUv.y, iUv.w, uv.y);
+                    vec4 billboardOffset = projectionMatrix * modelViewMatrix * vec4(offset, 1.0);
+                    vec2 scaledPosition = position.xy * (vec2(fontSize * fontRatio, fontSize) / resolution.xy);
+                    billboardOffset /= billboardOffset.w;
+                    billboardOffset.xy += scaledPosition;
+
+                    gl_Position = billboardOffset;
+                }
+            `,
+            fragmentShader: `
+                uniform sampler2D map;
+
+                varying vec2 vUv;
+
+                void main() {
+                    vec4 color = texture2D(map, vUv);
+                    if (color.a < 0.5) {
+                        discard;
+                    }
+                    gl_FragColor = color;
+                }
+            `,
+        });
+
+
+        this.xLabel = new Mesh(xLabelGeom, material);
+        this.scene.add(this.xLabel);
     }
 
     createBoundingBox() {

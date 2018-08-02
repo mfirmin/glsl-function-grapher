@@ -13,6 +13,7 @@ Vue.component('controls', {
                 'background-color': '#e4e4e4',
                 'box-shadow': '2px 2px 1px grey',
                 'border-radius': '1px',
+                padding: '1px',
             },
         };
     },
