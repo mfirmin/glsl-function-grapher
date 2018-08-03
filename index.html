@@ -5,7 +5,7 @@ title: Michael Firmin
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>GLSL 3D Function Grapher</title>
+    <title>3D Function Visualizer</title>
 
     <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="css/functiongrapher.css">
@@ -14,7 +14,7 @@ title: Michael Firmin
 <body>
   <div id="app">
     <div id="intro" :style="inputStyle">
-      <h1 v-if="state === 'initial'" style="text-align: center;">3D Function Grapher!</h1><br>
+      <h1 v-if="state === 'initial'" style="text-align: center;">3D Function Visualizer</h1><br>
       Enter an equation:<br>
       <eqn-input ref="input" @graph="updateEquation"></eqn-input>
       <div id="examples" v-if="state === 'initial'">
