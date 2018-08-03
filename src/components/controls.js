@@ -25,7 +25,8 @@ Vue.component('controls', {
             Greyscale: <input type="checkbox" checked @input="$emit('greyscale-updated', $event.target.checked)">
             <br>
             Opacity: <drag-number
-                id="'opacity'"
+                id="opacity"
+                ref="opacity"
                 :initialvalue="1.0"
                 :resolution="0.01"
                 :pixels-per-tick="5.0"
@@ -35,7 +36,8 @@ Vue.component('controls', {
             </drag-number>
             <br>
             Brightness: <drag-number
-                id="'brightness'"
+                id="brightness"
+                ref="brightness"
                 :initialvalue="1.0"
                 :resolution="0.1"
                 :pixels-per-tick="5.0"
@@ -45,7 +47,8 @@ Vue.component('controls', {
             </drag-number>
             <br>
             Sharpness: <drag-number
-                id="'sharpness'"
+                id="sharpness"
+                ref="sharpness"
                 :initialvalue="1.0"
                 :resolution="0.02"
                 :pixels-per-tick="5.0"
@@ -70,6 +73,7 @@ Vue.component('controls', {
             X bounds: [
                 <drag-number
                     id="xBounds0"
+                    ref="xBounds0"
                     :resolution="0.02"
                     :pixels-per-tick="5.0"
                     :max="xBounds[1]"
@@ -78,17 +82,23 @@ Vue.component('controls', {
                 </drag-number>,
                 <drag-number
                     id="xBounds1"
+                    ref="xBounds1"
                     :resolution="0.02"
                     :pixels-per-tick="5.0"
                     :min="xBounds[0]"
                     :initialvalue="xBounds[1]"
                     @value-changed="setXBounds(1, $event)">
                 </drag-number>
-            ]
+            ] <v-icon
+                small
+                :style="{ color: '#555' }"
+                @click="resetBounds('X')"
+                >refresh</v-icon>
             <br>
             Y bounds: [
                 <drag-number
                     id="yBounds0"
+                    ref="yBounds0"
                     :resolution="0.02"
                     :pixels-per-tick="5.0"
                     :max="yBounds[1]"
@@ -97,17 +107,23 @@ Vue.component('controls', {
                 </drag-number>,
                 <drag-number
                     id="yBounds1"
+                    ref="yBounds1"
                     :resolution="0.02"
                     :pixels-per-tick="5.0"
                     :min="yBounds[0]"
                     :initialvalue="yBounds[1]"
                     @value-changed="setYBounds(1, $event)">
                 </drag-number>
-            ]
+            ] <v-icon
+                small
+                :style="{ color: '#555' }"
+                @click="resetBounds('Y')"
+                >refresh</v-icon>
             <br>
             Z bounds: [
                 <drag-number
                     id="zBounds0"
+                    ref="zBounds0"
                     :resolution="0.02"
                     :pixels-per-tick="5.0"
                     :max="zBounds[1]"
@@ -116,13 +132,18 @@ Vue.component('controls', {
                 </drag-number>,
                 <drag-number
                     id="zBounds1"
+                    ref="zBounds1"
                     :resolution="0.02"
                     :pixels-per-tick="5.0"
                     :min="zBounds[0]"
                     :initialvalue="zBounds[1]"
                     @value-changed="setZBounds(1, $event)">
                 </drag-number>
-            ]
+            ] <v-icon
+                small
+                :style="{ color: '#555' }"
+                @click="resetBounds('Z')"
+                >refresh</v-icon>
             </p>
             <hr>
             <strong>Variables</strong>
@@ -160,6 +181,25 @@ Vue.component('controls', {
         },
         setZBounds(which, val) {
             this.$set(this.zBounds, which, val.value);
+        },
+
+        resetBounds(which) {
+            switch (which) {
+                case 'X':
+                    this.$refs.xBounds0.value = -1;
+                    this.$refs.xBounds1.value = 1;
+                    break;
+                case 'Y':
+                    this.$refs.yBounds0.value = -1;
+                    this.$refs.yBounds1.value = 1;
+                    break;
+                case 'Z':
+                    this.$refs.zBounds0.value = -1;
+                    this.$refs.zBounds1.value = 1;
+                    break;
+                default:
+                    break;
+            }
         },
     },
     watch: {
