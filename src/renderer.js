@@ -84,14 +84,14 @@ export class Renderer {
         const canvasWidth = 128;
         const canvasHeight = 128;
         const textHeight = 30;
-        const fontSize = 30;
+        const fontSize = 18;
 
         const canvas = document.createElement('canvas');
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
         const context = canvas.getContext('2d');
         context.textBaseline = 'bottom';
-        context.fillStyle = 'white';
+        context.fillStyle = 'lightgrey';
 
         context.font = `${textHeight}px Arial`;
         const xWidth = context.measureText('X').width;
