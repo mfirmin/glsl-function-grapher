@@ -68,16 +68,16 @@ export class Renderer {
         this.yAxis.position.z = y;
         this.zAxis.position.y = z;
 
-        this.xLabel.geometry.attributes.offset.array[1] = z + 0.1 * Math.sign(z);
-        this.xLabel.geometry.attributes.offset.array[2] = -y + 0.1 * -Math.sign(y);
+        this.axisLabels.geometry.attributes.offset.array[1] = z + 0.1 * Math.sign(z);
+        this.axisLabels.geometry.attributes.offset.array[2] = -y + 0.1 * -Math.sign(y);
 
-        this.xLabel.geometry.attributes.offset.array[3] = -x + 0.1 * -Math.sign(x);
-        this.xLabel.geometry.attributes.offset.array[4] = z + 0.1 * Math.sign(z);
+        this.axisLabels.geometry.attributes.offset.array[3] = -x + 0.1 * -Math.sign(x);
+        this.axisLabels.geometry.attributes.offset.array[4] = z + 0.1 * Math.sign(z);
 
-        this.xLabel.geometry.attributes.offset.array[6] = x + 0.1 * Math.sign(x);
-        this.xLabel.geometry.attributes.offset.array[8] = -y + 0.1 * -Math.sign(y);
+        this.axisLabels.geometry.attributes.offset.array[6] = x + 0.1 * Math.sign(x);
+        this.axisLabels.geometry.attributes.offset.array[8] = -y + 0.1 * -Math.sign(y);
 
-        this.xLabel.geometry.attributes.offset.needsUpdate = true;
+        this.axisLabels.geometry.attributes.offset.needsUpdate = true;
     }
 
     createAxisLabels() {
@@ -135,22 +135,22 @@ export class Renderer {
             0, vZ, uZ, vY,
         ]);
 
-        const xLabelGeom = new InstancedBufferGeometry();
-        xLabelGeom.addAttribute('position', new BufferAttribute(labelPositions, 3));
-        xLabelGeom.addAttribute('offset', new InstancedBufferAttribute(new Float32Array([
+        const axisLabelsGeom = new InstancedBufferGeometry();
+        axisLabelsGeom.addAttribute('position', new BufferAttribute(labelPositions, 3));
+        axisLabelsGeom.addAttribute('offset', new InstancedBufferAttribute(new Float32Array([
             0, -1.1, 1.1,
             1.1, -1.1, 0,
             -1.1, 0, 1.1,
         ]), 3, 1));
-        xLabelGeom.addAttribute('fontRatio', new InstancedBufferAttribute(new Float32Array([
+        axisLabelsGeom.addAttribute('fontRatio', new InstancedBufferAttribute(new Float32Array([
             xWidth / textHeight,
             yWidth / textHeight,
             zWidth / textHeight,
         ]), 1, 1));
-        xLabelGeom.addAttribute('uv', new BufferAttribute(uv, 2));
-        xLabelGeom.addAttribute('iUv', new InstancedBufferAttribute(iUv, 4, 1));
+        axisLabelsGeom.addAttribute('uv', new BufferAttribute(uv, 2));
+        axisLabelsGeom.addAttribute('iUv', new InstancedBufferAttribute(iUv, 4, 1));
 
-        xLabelGeom.maxInstancedCount = 3;
+        axisLabelsGeom.maxInstancedCount = 3;
 
         const material = new ShaderMaterial({
             uniforms: {
@@ -195,8 +195,8 @@ export class Renderer {
         });
 
 
-        this.xLabel = new Mesh(xLabelGeom, material);
-        this.scene.add(this.xLabel);
+        this.axisLabels = new Mesh(axisLabelsGeom, material);
+        this.scene.add(this.axisLabels);
     }
 
     createBoundingBox() {
@@ -342,6 +342,10 @@ export class Renderer {
         this.renderer.setSize(w, h);
         this.camera.aspect = w / h;
         this.camera.updateProjectionMatrix();
+
+        if (this.axisLabels) {
+            this.axisLabels.material.uniforms.resolution.value.set(w, h);
+        }
     }
 
     go(onRender = null) {
