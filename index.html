@@ -271,17 +271,17 @@ title: Michael Firmin
         equation: '',
         graphStyle: {
           position: 'absolute',
-          left: '25vw',
+          left: 'calc(25vw - 100px)',
           top: '100px',
         },
         editStyle: {
           position: 'absolute',
-          left: '25vw',
+          left: 'calc(25vw - 100px)',
           top: 'calc(110px + 75vh)',
         },
         controlsStyle: {
           position: 'absolute',
-          left: 'calc(75vw + 10px)',
+          left: 'calc(75vw - 90px)',
           top: '100px',
         },
         variables: {},
@@ -375,7 +375,7 @@ title: Michael Firmin
         inputStyle() {
           return {
             position: 'absolute',
-            left: '25vw',
+            left: 'calc(25vw - 100px)',
             top: this.state === 'initial' ? '25vh' : '10px',
           };
         },

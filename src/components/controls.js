@@ -15,6 +15,7 @@ Vue.component('controls', {
                 'box-shadow': '2px 2px 1px grey',
                 'border-radius': '1px',
                 padding: '2px',
+                height: 'calc(75vh - 5px)',
             },
         };
     },

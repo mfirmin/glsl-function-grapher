@@ -5,19 +5,27 @@ Vue.component('eqn-input', {
         return {
             equation: '',
             styleObject: {
-                width: '50vw',
-                height: '30px',
-                'font-size': 'medium',
+                width: 'calc(50vw + 215px)',
+                overflow: 'visible',
+                display: 'flex',
+            },
+            inputStyle: {
+                'font-size': '16px',
                 'background-color': '#eee',
+                height: '30px',
+                'flex-grow': 1,
+            },
+            buttonStyle: {
+                float: 'right',
             },
         };
     },
     template: `
-        <span>
-            <font v-bind:style="{ 'font-size': styleObject['font-size'] }"> 0 = </font>
-            <input v-bind:style="styleObject" placeholder="f(x,y,z)" v-model="equation" @keyup.enter="graph">
-            <button v-on:click="graph">Graph!</button>
-        </span>
+        <div :style="styleObject">
+            <font :style="{ 'font-size': inputStyle['font-size'], 'padding-top': '9px' }"> 0 = </font>
+            <input :style="inputStyle" placeholder="f(x,y,z)" v-model="equation" @keyup.enter="graph">
+            <button :style="buttonStyle" @click="graph">Graph!</button>
+        </div>
     `,
     methods: {
         graph() {
