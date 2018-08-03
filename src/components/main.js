@@ -52,7 +52,7 @@ Vue.component('main-graph', {
         computeGLSL(eqn, uniforms) {
             let glsl = '';
             for (const node of eqn) {
-                if (node.type === 'coefficient') {
+                if (node.type === 'coefficient' || node.type === 'variable') {
                     if (uniforms[`var${node.id}`] === undefined) {
                         uniforms[`var${node.id}`] = { value: node.value, type: 'f' };
                     }

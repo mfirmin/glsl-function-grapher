@@ -6,6 +6,10 @@ body {
     color: green;
 }
 
+.variable {
+    color: #0800dd;
+}
+
 .error {
     color: red;
 }
@@ -19,7 +23,7 @@ body {
     overflow: visible;
 }
 
-.help .tooltip {
+.tooltip {
     visibility: hidden;
     position: absolute;
     min-width: 200px;

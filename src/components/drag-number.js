@@ -1,7 +1,11 @@
-import Vue from 'vue/dist/vue.js';
+import Vue from 'vue/dist/vue';
 
 Vue.component('drag-number', {
     props: {
+        id: {
+            type: String,
+            default: '0',
+        },
         initialvalue: {
             type: Number,
             default: 0.0,
@@ -119,7 +123,7 @@ Vue.component('drag-number', {
     watch: {
         value(val) {
             this.$emit('value-changed', {
-                key: this.$vnode.key,
+                id: this.id,
                 value: val,
             });
         },

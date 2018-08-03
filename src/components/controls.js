@@ -1,6 +1,7 @@
 import Vue from 'vue/dist/vue';
 
 Vue.component('controls', {
+    props: ['variables'],
     data() {
         return {
             opaque: 1,
@@ -19,9 +20,12 @@ Vue.component('controls', {
     },
     template: `
         <div :style="styleObject">
+            <strong>Settings</strong>
+            <p>
             Greyscale: <input type="checkbox" checked @input="$emit('greyscale-updated', $event.target.checked)">
             <br>
             Opacity: <drag-number
+                id="'opacity'"
                 :initialvalue="1.0"
                 :resolution="0.01"
                 :pixels-per-tick="5.0"
@@ -31,6 +35,7 @@ Vue.component('controls', {
             </drag-number>
             <br>
             Brightness: <drag-number
+                id="'brightness'"
                 :initialvalue="1.0"
                 :resolution="0.1"
                 :pixels-per-tick="5.0"
@@ -40,6 +45,7 @@ Vue.component('controls', {
             </drag-number>
             <br>
             Sharpness: <drag-number
+                id="'sharpness'"
                 :initialvalue="1.0"
                 :resolution="0.02"
                 :pixels-per-tick="5.0"
@@ -63,6 +69,7 @@ Vue.component('controls', {
             <br>
             X bounds: [
                 <drag-number
+                    id="xBounds0"
                     :resolution="0.02"
                     :pixels-per-tick="5.0"
                     :max="xBounds[1]"
@@ -70,6 +77,7 @@ Vue.component('controls', {
                     @value-changed="setXBounds(0, $event)">
                 </drag-number>,
                 <drag-number
+                    id="xBounds1"
                     :resolution="0.02"
                     :pixels-per-tick="5.0"
                     :min="xBounds[0]"
@@ -80,6 +88,7 @@ Vue.component('controls', {
             <br>
             Y bounds: [
                 <drag-number
+                    id="yBounds0"
                     :resolution="0.02"
                     :pixels-per-tick="5.0"
                     :max="yBounds[1]"
@@ -87,6 +96,7 @@ Vue.component('controls', {
                     @value-changed="setYBounds(0, $event)">
                 </drag-number>,
                 <drag-number
+                    id="yBounds1"
                     :resolution="0.02"
                     :pixels-per-tick="5.0"
                     :min="yBounds[0]"
@@ -97,6 +107,7 @@ Vue.component('controls', {
             <br>
             Z bounds: [
                 <drag-number
+                    id="zBounds0"
                     :resolution="0.02"
                     :pixels-per-tick="5.0"
                     :max="zBounds[1]"
@@ -104,6 +115,7 @@ Vue.component('controls', {
                     @value-changed="setZBounds(0, $event)">
                 </drag-number>,
                 <drag-number
+                    id="zBounds1"
                     :resolution="0.02"
                     :pixels-per-tick="5.0"
                     :min="zBounds[0]"
@@ -111,6 +123,32 @@ Vue.component('controls', {
                     @value-changed="setZBounds(1, $event)">
                 </drag-number>
             ]
+            </p>
+            <hr>
+            <strong>Variables</strong>
+            <span class="help">
+                <v-icon
+                    small
+                    slot="activator"
+                    :style="{ color: '#555' }"
+                    >help
+                </v-icon>
+                <span class="tooltip">
+                    Variables are represented by alphabetic characters other than 'x', 'y', and 'z'. If present in the equation, their values can be adjusted below.
+                </span>
+            </span>
+            <p>
+            <div v-for="(value, name) in variables">
+                {{ name }}: <drag-number
+                    :key="value.id"
+                    :id="name"
+                    :resolution="0.02"
+                    :pixels-per-tick="5.0"
+                    :initialvalue="value.value"
+                    @value-changed="$emit('variable-changed', $event)">
+                </drag-number>
+            </div>
+            </p>
         </div>
     `,
     methods: {
