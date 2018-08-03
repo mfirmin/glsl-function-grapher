@@ -7,7 +7,7 @@ Vue.component('eqn-edit', {
             styleObject: {
                 width: '50vw',
                 height: '30px',
-                'font-size': 'x-large',
+                'font-size': 'large',
             },
         };
     },

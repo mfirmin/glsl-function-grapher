@@ -7,7 +7,7 @@ Vue.component('eqn-input', {
             styleObject: {
                 width: '50vw',
                 height: '30px',
-                'font-size': 'large',
+                'font-size': 'medium',
                 'background-color': '#eee',
             },
         };
