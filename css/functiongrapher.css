@@ -17,6 +17,7 @@ body {
 .drag-number {
     text-decoration: underline; 
     color: #080;
+    cursor: ew-resize;
 }
 
 .help {
