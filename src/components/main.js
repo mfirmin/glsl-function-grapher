@@ -6,8 +6,6 @@ Vue.component('main-graph', {
         return {
             fg: null,
             outerStyle: {
-                width: '50vw',
-                height: '75vh',
                 'box-shadow': '1px 1px 1px grey',
                 'border-radius': '5px',
             },

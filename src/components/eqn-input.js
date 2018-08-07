@@ -4,11 +4,6 @@ Vue.component('eqn-input', {
     data() {
         return {
             equation: '',
-            styleObject: {
-                width: 'calc(50vw + 215px)',
-                overflow: 'visible',
-                display: 'flex',
-            },
             inputStyle: {
                 'font-size': '16px',
                 'background-color': '#eee',
@@ -21,7 +16,7 @@ Vue.component('eqn-input', {
         };
     },
     template: `
-        <div :style="styleObject">
+        <div class="entry">
             <font :style="{ 'font-size': inputStyle['font-size'], 'padding-top': '9px' }"> 0 = </font>
             <input :style="inputStyle" placeholder="f(x,y,z)" v-model="equation" @keyup.enter="graph">
             <button :style="buttonStyle" @click="graph">Graph!</button>

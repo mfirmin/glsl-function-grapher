@@ -1,5 +1,25 @@
+/* Global styles (for all devices) */
+
 body {
     background-color: #ccc
+}
+
+.input {
+    position: absolute;
+    top: 25vh;
+}
+
+.input.graphing {
+    top: 10px;
+}
+
+.graph {
+    position: absolute;
+    top: 55px;
+}
+
+.controls {
+    position: absolute;
 }
 
 .constant {
@@ -39,3 +59,101 @@ body {
     transition-delay: 0.5s;
 }
 
+/* Device-Specific Styles */
+
+/* Smartphones (portrait and landscape) ----------- */
+@media only screen 
+and (min-device-width : 320px) 
+and (max-device-width : 480px) {
+    /* Styles */
+    .graph {
+        width: calc(100vw - 4px);
+        height: 40vh;
+        left: 2px;
+    }
+
+    .controls {
+        left: 2px;
+        top: calc(40vh + 60px);
+        width: calc(100vw - 10px);
+        height: 200px;
+    }
+
+    .input {
+        left: 0px;
+    }
+
+    .input .entry {
+        width: 100vw;
+        overflow: visible;
+        display: flex;
+    }
+}
+
+/* Smartphones (landscape) ----------- */
+@media only screen 
+and (min-width : 321px) {
+    /* Styles */
+}
+
+/* Smartphones (portrait) ----------- */
+@media only screen 
+and (max-width : 320px) {
+    /* Styles */
+}
+
+/* iPads (portrait and landscape) ----------- */
+@media only screen 
+and (min-device-width : 768px) 
+and (max-device-width : 1024px) {
+    /* Styles */
+}
+
+/* iPads (landscape) ----------- */
+@media only screen 
+and (min-device-width : 768px) 
+and (max-device-width : 1024px) 
+and (orientation : landscape) {
+    /* Styles */
+}
+
+/* iPads (portrait) ----------- */
+@media only screen 
+and (min-device-width : 768px) 
+and (max-device-width : 1024px) 
+and (orientation : portrait) {
+    /* Styles */
+}
+
+/* Desktops and laptops ----------- */
+@media only screen 
+and (min-width : 1224px) {
+    .graph {
+        width: 50vw;
+        height: 75vh;
+        left: calc(25vw - 100px);
+    }
+
+    .controls {
+        left: calc(75vw - 90px);
+        top: 55px;
+        width: 200px;
+        height: calc(75vh - 5px);
+    }
+
+    .input {
+        left: calc(25vw - 100px);
+    }
+
+    .input .entry {
+        width: calc(50vw + 215px);
+        overflow: visible;
+        display: flex;
+    }
+}
+
+/* Large screens ----------- */
+@media only screen 
+and (min-width : 1824px) {
+    /* Styles */
+}

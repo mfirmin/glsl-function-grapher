@@ -10,18 +10,16 @@ Vue.component('controls', {
             zBounds: [-1, 1],
             styleObject: {
                 border: '1px solid black',
-                width: '200px',
                 'background-color': '#e4e4e4',
                 'box-shadow': '2px 2px 1px grey',
                 'border-radius': '1px',
                 padding: '2px',
-                height: 'calc(75vh - 5px)',
             },
         };
     },
     template: `
         <div :style="styleObject">
-            <strong>Settings</strong>
+            <strong>Settings</strong><span :style="{ 'float': 'right', 'color': 'blue', 'text-decoration': 'underline', 'margin-right': '2px' }">Help</span>
             <p>
             Greyscale: <input type="checkbox" checked @input="$emit('greyscale-updated', $event.target.checked)">
             <br>
