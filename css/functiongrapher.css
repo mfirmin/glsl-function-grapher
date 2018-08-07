@@ -1,6 +1,12 @@
 /* Global styles (for all devices) */
 
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
 body {
+    margin: 0px;
     background-color: #ccc
 }
 
@@ -20,6 +26,11 @@ body {
 
 .controls {
     position: absolute;
+}
+
+.controls p {
+    margin-top: 0.1em;
+    margin-bottom: 0.1em;
 }
 
 .constant {
@@ -62,25 +73,58 @@ body {
 /* Device-Specific Styles */
 
 /* Smartphones (portrait and landscape) ----------- */
+/*
 @media only screen 
 and (min-device-width : 320px) 
 and (max-device-width : 480px) {
-    /* Styles */
+}
+*/
+
+/* Smartphones (landscape) ----------- */
+/*
+@media only screen 
+and (min-width : 451px) 
+and (max-width : 800px{
+}
+*/
+
+/* Smartphones (portrait) ----------- */
+@media only screen 
+and (max-width : 450px) {
     .graph {
+        position: relative;
+        top: 2px;
         width: calc(100vw - 4px);
         height: 40vh;
         left: 2px;
     }
 
-    .controls {
-        left: 2px;
-        top: calc(40vh + 60px);
-        width: calc(100vw - 10px);
-        height: 200px;
+    #controls-container {
+        margin-top: 5px;
+        margin-left: 2px;
+        margin-right: 2px;
+        margin-bottom: 5px;
+    }
+
+    #settings {
+        width: 50%;
+        display: table-cell;
+    }
+
+    #variables {
+        width: 50%;
+        display: table-cell;
     }
 
     .input {
+        position: absolute;
         left: 0px;
+        top: 25vh;
+    }
+
+    .input.graphing {
+        position: relative;
+        top: 0px;
     }
 
     .input .entry {
@@ -88,57 +132,64 @@ and (max-device-width : 480px) {
         overflow: visible;
         display: flex;
     }
-}
 
-/* Smartphones (landscape) ----------- */
-@media only screen 
-and (min-width : 321px) {
-    /* Styles */
-}
+    .controls-separator {
+        display: none;
+    }
 
-/* Smartphones (portrait) ----------- */
-@media only screen 
-and (max-width : 320px) {
-    /* Styles */
+    .edit {
+        position: relative;
+        height: auto;
+        width: 100%;
+        left: 0px;
+        bottom: 0px;
+    }
 }
 
 /* iPads (portrait and landscape) ----------- */
+/*
 @media only screen 
 and (min-device-width : 768px) 
 and (max-device-width : 1024px) {
-    /* Styles */
 }
+*/
 
 /* iPads (landscape) ----------- */
+/*
 @media only screen 
 and (min-device-width : 768px) 
 and (max-device-width : 1024px) 
 and (orientation : landscape) {
-    /* Styles */
 }
+*/
 
 /* iPads (portrait) ----------- */
+/*
 @media only screen 
 and (min-device-width : 768px) 
 and (max-device-width : 1024px) 
 and (orientation : portrait) {
-    /* Styles */
 }
+*/
 
 /* Desktops and laptops ----------- */
 @media only screen 
-and (min-width : 1224px) {
+and (min-width : 500px) {
     .graph {
         width: 50vw;
         height: 75vh;
         left: calc(25vw - 100px);
     }
 
-    .controls {
+    #controls-container {
+        position: absolute;
         left: calc(75vw - 90px);
         top: 55px;
-        width: 200px;
+        width: 205px;
         height: calc(75vh - 5px);
+    }
+
+    .controls {
     }
 
     .input {
@@ -149,6 +200,14 @@ and (min-width : 1224px) {
         width: calc(50vw + 215px);
         overflow: visible;
         display: flex;
+    }
+
+    .edit {
+        position: absolute;
+        left: calc(25vw - 100px);
+        top: calc(60px + 75vh);
+        width: calc(50vw + 215px);
+        height: 30px;
     }
 }
 

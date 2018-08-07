@@ -28,20 +28,22 @@ title: Michael Firmin
       </div>
     </div>
     <main-graph ref="main" v-if="state === 'graphing'" class="graph"></main-graph>
-    <eqn-edit v-if="state === 'graphing'" :style="editStyle" :equationhtml="equationHtml" @coefficient-changed="updateCoefficient"></eqn-edit>
-    <controls
-      class="controls"
-      :variables="variables"
-      v-if="state === 'graphing'"
-      @opacity-updated="opacityUpdated"
-      @greyscale-updated="greyscaleUpdated"
-      @brightness-updated="brightnessUpdated"
-      @r-updated="rUpdated"
-      @x-bounds-updated="xBoundsUpdated"
-      @y-bounds-updated="yBoundsUpdated"
-      @z-bounds-updated="zBoundsUpdated"
-      @variable-changed="variableUpdated">
-    </controls>
+    <div id="controls-container">
+      <controls
+        class="controls"
+        :variables="variables"
+        v-if="state === 'graphing'"
+        @opacity-updated="opacityUpdated"
+        @greyscale-updated="greyscaleUpdated"
+        @brightness-updated="brightnessUpdated"
+        @r-updated="rUpdated"
+        @x-bounds-updated="xBoundsUpdated"
+        @y-bounds-updated="yBoundsUpdated"
+        @z-bounds-updated="zBoundsUpdated"
+        @variable-changed="variableUpdated">
+      </controls>
+    </div>
+    <eqn-edit class="edit" v-if="state === 'graphing'" :equationhtml="equationHtml" @coefficient-changed="updateCoefficient"></eqn-edit>
   </div>
   <script>
     // Mapping of method name to glsl equivalent
@@ -271,11 +273,6 @@ title: Michael Firmin
       data: {
         state: 'initial', // or 'graphing'
         equation: '',
-        editStyle: {
-          position: 'absolute',
-          left: 'calc(25vw - 100px)',
-          top: 'calc(110px + 75vh)',
-        },
         variables: {},
       },
       methods: {

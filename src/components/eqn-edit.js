@@ -5,8 +5,6 @@ Vue.component('eqn-edit', {
     data() {
         return {
             styleObject: {
-                width: 'calc(50vw + 215px)',
-                height: '30px',
                 'font-size': 'large',
             },
         };
