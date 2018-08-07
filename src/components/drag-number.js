@@ -59,6 +59,21 @@ Vue.component('drag-number', {
                 this.onDragFinish(evt);
             }
         });
+
+        document.addEventListener('touchmove', (evt) => {
+            if (this.dragging) {
+                evt.preventDefault();
+                this.onDrag(evt);
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchend', (evt) => {
+            if (this.dragging) {
+                evt.preventDefault();
+                evt.stopPropagation();
+                this.onDragFinish(evt);
+            }
+        }, { passive: false });
     },
     template: `
         <span
@@ -66,6 +81,7 @@ Vue.component('drag-number', {
             v-if="state === 'drag'"
             class="drag-number"
             @mousedown="onDragStart"
+            @touchstart="onDragStart"
             >{{ value.toFixed(fix) }}</span>
         <input
             type="number"
@@ -94,15 +110,34 @@ Vue.component('drag-number', {
             this.state = 'drag';
         },
         onDragStart(evt) {
-            this.mouseStart = [evt.pageX, evt.pageY];
+            let x;
+            let y;
+            if (evt.pageX) {
+                [x, y] = [evt.pageX, evt.pageY];
+            } else if (evt.touches && evt.touches[0] && evt.touches[0].pageX) {
+                [x, y] = [evt.touches[0].pageX, evt.touches[0].pageY];
+            } else {
+                console.warn('Unknown event');
+                return;
+            }
+            this.mouseStart = [x, y];
             this.valueStart = this.value;
             this.dragging = true;
             this.dragged = false;
         },
         onDrag(evt) {
+            let x;
+            if (evt.pageX) {
+                [x] = [evt.pageX];
+            } else if (evt.touches && evt.touches[0] && evt.touches[0].pageX) {
+                [x] = [evt.touches[0].pageX];
+            } else {
+                console.warn('Unknown event');
+                return;
+            }
             // Mark that we are dragging, so we don't accidentally switch to an input on mouseup
             this.dragged = true;
-            const delta = Math.floor((evt.pageX - this.mouseStart[0]) / this.pixelsPerTick);
+            const delta = Math.floor((x - this.mouseStart[0]) / this.pixelsPerTick);
             let newValue = this.valueStart + delta * this._resolution;
             if (newValue > this.max) {
                 newValue = this.max;

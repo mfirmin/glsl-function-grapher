@@ -66,11 +66,11 @@ Vue.component('controls', {
                             :style="{ color: '#555' }"
                             >help
                         </v-icon>
-                        <span class="tooltip">
+                        <div class="tooltip">
                             Adjusts the "sharpness" of the render.
                             Lower values produce a sharper image, but lead to rendering artefacts.
                             Higher values will produce a blurrier image.
-                        </span>
+                        </div>
                     </span>
                     <br>
                     X bounds: [
@@ -160,9 +160,9 @@ Vue.component('controls', {
                         :style="{ color: '#555' }"
                         >help
                     </v-icon>
-                    <span class="tooltip">
+                    <div class="tooltip">
                         Variables are represented by alphabetic characters other than 'x', 'y', and 'z'. If present in the equation, their values can be adjusted below.
-                    </span>
+                    </div>
                 </span>
                 <p>
                     <div v-for="(value, name) in variables">

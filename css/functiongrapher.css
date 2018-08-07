@@ -2,7 +2,7 @@
 
 html, body {
     max-width: 100%;
-    overflow-x: hidden;
+    overflow-x: visible;
 }
 
 body {
@@ -52,16 +52,18 @@ body {
 }
 
 .help {
-    overflow: visible;
+    position: absolute;
+    overflow-x: visible;
 }
 
 .tooltip {
     visibility: hidden;
-    position: absolute;
-    min-width: 200px;
+    position: fixed;
     background-color: lightblue;
     border: 1px solid black;
     padding: 2px;
+    max-width: 200px;
+    z-index: 100;
 }
 
 .help:hover .tooltip {
@@ -73,12 +75,15 @@ body {
 /* Device-Specific Styles */
 
 /* Smartphones (portrait and landscape) ----------- */
-/*
+
 @media only screen 
 and (min-device-width : 320px) 
-and (max-device-width : 480px) {
+and (max-device-width : 800px) {
+    .help {
+        visibility: hidden;
+    }
 }
-*/
+
 
 /* Smartphones (landscape) ----------- */
 /*
@@ -90,7 +95,7 @@ and (max-width : 800px{
 
 /* Smartphones (portrait) ----------- */
 @media only screen 
-and (max-width : 450px) {
+and (max-width : 499px) {
     .graph {
         position: relative;
         top: 2px;
@@ -129,7 +134,6 @@ and (max-width : 450px) {
 
     .input .entry {
         width: 100vw;
-        overflow: visible;
         display: flex;
     }
 
@@ -189,16 +193,12 @@ and (min-width : 500px) {
         height: calc(75vh - 5px);
     }
 
-    .controls {
-    }
-
     .input {
         left: calc(25vw - 100px);
     }
 
     .input .entry {
         width: calc(50vw + 215px);
-        overflow: visible;
         display: flex;
     }
 
