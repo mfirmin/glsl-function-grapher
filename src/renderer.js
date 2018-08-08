@@ -325,6 +325,10 @@ export class Renderer {
         controls.zoomSpeed = 1.2;
 
         controls.noZoom = false;
+        controls.noPan = true;
+
+        controls.minDistance = 3;
+        controls.maxDistance = 8;
 
         controls.staticMoving = true;
         controls.dynamicDampingFactor = 0.3;
