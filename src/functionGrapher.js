@@ -31,7 +31,7 @@ export class FunctionGrapher {
         this._R = 1;
         this._opacity = 1.0;
         this._brightness = 1.0;
-        this._greyscale = 1.0;
+        this._greyscale = 0.0;
 
         // Stepsize for sampling... 1 seems a good compromise between real-time shading and quality
         // on my MBP

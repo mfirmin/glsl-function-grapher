@@ -12,6 +12,8 @@ Vue.component('eqn-input', {
             },
             buttonStyle: {
                 float: 'right',
+                'margin-left': '2px',
+                'background-color': '#52545e',
             },
         };
     },
@@ -19,7 +21,7 @@ Vue.component('eqn-input', {
         <div class="entry">
             <font :style="{ 'font-size': inputStyle['font-size'], 'padding-top': '9px' }"> 0 = </font>
             <input :style="inputStyle" placeholder="f(x,y,z)" v-model="equation" @keyup.enter="graph">
-            <button :style="buttonStyle" @click="graph">Graph!</button>
+            <button :style="buttonStyle" @click="graph">Go</button>
         </div>
     `,
     methods: {

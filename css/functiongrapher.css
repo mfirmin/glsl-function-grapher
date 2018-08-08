@@ -10,11 +10,24 @@ body {
     background-color: #ccc
 }
 
+button {
+    background-color: #73747a;
+    border: none;
+    color: white;
+    padding: 10px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    border-radius: 2px;
+    box-shadow: 1px 1px 1px black;
+}
+
 .title {
     font-family: Arial;
     font-weight: bold;
     text-align: center;
-    color: #ff7400;
+    color: #545458;
 }
 
 .input {

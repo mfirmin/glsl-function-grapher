@@ -20,20 +20,23 @@ title: Michael Firmin
       Enter an equation:
       </div>
       <eqn-input ref="input" @graph="updateEquation"></eqn-input>
-      <div id="examples" v-if="state === 'initial'">
+      <div id="examples" v-if="state === 'initial'" style="margin-top: 10px;">
         Or try an example function:
+        <div>
         <button @click="example('clebsch')">Clebsch Diagonal Cubic</button>
         <button @click="example('kiss')">Kiss Surface</button>
         <button @click="example('plane')">Simple Plane</button>
         <button @click="example('sin')">z=sin(xy)</button>
+        </div>
       </div>
     </div>
     <main-graph ref="main" v-if="state === 'graphing'" class="graph"></main-graph>
-    <div id="controls-container">
+    <div
+      id="controls-container"
+      v-if="state === 'graphing'">
       <controls
         class="controls"
         :variables="variables"
-        v-if="state === 'graphing'"
         @opacity-updated="opacityUpdated"
         @greyscale-updated="greyscaleUpdated"
         @brightness-updated="brightnessUpdated"

@@ -25,7 +25,7 @@ Vue.component('controls', {
                 <div>
                     <strong>Settings</strong>
                     <p>
-                    Greyscale: <input type="checkbox" checked @change="$emit('greyscale-updated', $event.target.checked)">
+                    Greyscale: <input type="checkbox" @change="$emit('greyscale-updated', $event.target.checked)">
                     <br>
                     Opacity: <drag-number
                         id="opacity"
