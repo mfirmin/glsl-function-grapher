@@ -14,10 +14,11 @@ title: Michael Firmin
 <body>
   <div id="app">
     <div id="intro" :class="{ input: true, graphing: state === 'graphing' }">
-      <h1 v-if="state === 'initial'" style="text-align: center;">3D Function Visualizer</h1>
-      <span v-if="state === 'initial'">
-      Enter an equation:<br>
-      </span>
+      <div v-if="state === 'initial'" class="title">
+      <img src="static/images/logo.png" class="logo">3D Function Visualizer</div>
+      <div v-if="state === 'initial'" style="margin-top: 20px;">
+      Enter an equation:
+      </div>
       <eqn-input ref="input" @graph="updateEquation"></eqn-input>
       <div id="examples" v-if="state === 'initial'">
         Or try an example function:

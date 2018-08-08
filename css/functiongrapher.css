@@ -10,6 +10,13 @@ body {
     background-color: #ccc
 }
 
+.title {
+    font-family: Arial;
+    font-weight: bold;
+    text-align: center;
+    color: #ff7400;
+}
+
 .input {
     position: absolute;
     top: 25vh;
@@ -96,6 +103,14 @@ and (max-width : 800px{
 /* Smartphones (portrait) ----------- */
 @media only screen 
 and (max-width : 499px) {
+    .title {
+        font-size: 8vw;
+    }
+    .logo {
+        position: relative;
+        top: 0.25em; 
+        width: 9vw; 
+    }
     .graph {
         position: relative;
         top: 2px;
@@ -179,6 +194,17 @@ and (orientation : portrait) {
 /* Desktops and laptops ----------- */
 @media only screen 
 and (min-width : 500px) {
+    .title {
+        font-size: 5vw;
+        width: calc(50vw + 215px);
+    }
+
+    .logo {
+        position: relative;
+        top: 0.2em; 
+        width: 5vw; 
+    }
+
     .graph {
         width: 50vw;
         height: 75vh;
