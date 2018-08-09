@@ -284,7 +284,8 @@ title: Michael Firmin
       },
       methods: {
         ignoreTip() {
-          if (window.localStorage.getItem('hasDragged') === null) {
+          if (this.showTip && window.localStorage.getItem('hasDragged') === null) {
+            this.showTip = false;
             window.localStorage.setItem('hasDragged', 'true');
           }
         },
@@ -326,33 +327,41 @@ title: Michael Firmin
         },
         updateCoefficient(val) {
           this.$refs.main.updateCoefficient(val.id, val.value);
+          this.ignoreTip();
         },
         opacityUpdated(val) {
           this.$refs.main.setOpacity(val.value);
+          this.ignoreTip();
         },
         greyscaleUpdated(val) {
           this.$refs.main.setGreyscale(val);
+          this.ignoreTip();
         },
         rUpdated(val) {
           this.$refs.main.setR(val.value);
+          this.ignoreTip();
         },
         brightnessUpdated(val) {
           this.$refs.main.setBrightness(val.value);
+          this.ignoreTip();
         },
         xBoundsUpdated(val) {
           this.$refs.main.setXBounds(val.value);
+          this.ignoreTip();
         },
         yBoundsUpdated(val) {
           this.$refs.main.setYBounds(val.value);
+          this.ignoreTip();
         },
         zBoundsUpdated(val) {
           this.$refs.main.setZBounds(val.value);
+          this.ignoreTip();
         },
         variableUpdated(val) {
           this.$refs.main.updateCoefficient(val.id, val.value);
+          this.ignoreTip();
         },
         closeTip() {
-          this.showTip = false;
           this.ignoreTip();
         },
       },
