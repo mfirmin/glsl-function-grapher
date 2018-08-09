@@ -1,7 +1,7 @@
 import Vue from 'vue/dist/vue';
 
 Vue.component('controls', {
-    props: ['variables'],
+    props: ['variables', 'show-tip'],
     data() {
         return {
             opaque: 1,
@@ -37,6 +37,14 @@ Vue.component('controls', {
                         :max="1.0"
                         @value-changed="$emit('opacity-updated', $event)">
                     </drag-number>
+                    <transition name="fade">
+                        <span style="position: relative;" v-if="showTip">
+                            <tip
+                                @close="$emit('close-tip')"
+                                text="Green numbers can be dragged or clicked."
+                            ></tip>
+                        </span>
+                    </transition>
                     <br>
                     Brightness: <drag-number
                         id="brightness"

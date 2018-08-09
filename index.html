@@ -36,6 +36,7 @@ title: Michael Firmin
       v-if="state === 'graphing'">
       <controls
         class="controls"
+        :show-tip="showTip"
         :variables="variables"
         @opacity-updated="opacityUpdated"
         @greyscale-updated="greyscaleUpdated"
@@ -44,7 +45,8 @@ title: Michael Firmin
         @x-bounds-updated="xBoundsUpdated"
         @y-bounds-updated="yBoundsUpdated"
         @z-bounds-updated="zBoundsUpdated"
-        @variable-changed="variableUpdated">
+        @variable-changed="variableUpdated"
+        @close-tip="closeTip">
       </controls>
     </div>
     <eqn-edit class="edit" v-if="state === 'graphing'" :equationhtml="equationHtml" @coefficient-changed="updateCoefficient"></eqn-edit>
@@ -276,18 +278,30 @@ title: Michael Firmin
       el: '#app',
       data: {
         state: 'initial', // or 'graphing'
+        showTip: false,
         equation: '',
         variables: {},
       },
       methods: {
-        updateEquation: function(event) {
+        ignoreTip() {
+          if (window.localStorage.getItem('hasDragged') === null) {
+            window.localStorage.setItem('hasDragged', 'true');
+          }
+        },
+        updateEquation(event) {
           if (this.state !== 'graphing') {
             history.pushState({ equation: event.newEquation }, "graphing");
             this.state = 'graphing';
+            setTimeout(() => {
+              const hasDragged = window.localStorage.getItem('hasDragged');
+              if (hasDragged !== 'true') {
+                this.showTip = true;
+              }
+            }, 5000);
           }
           this.equation = event.newEquation;
         },
-        example: function(which) {
+        example(which) {
           let equation = '';
           switch (which) {
             case 'clebsch':
@@ -310,32 +324,36 @@ title: Michael Firmin
           this.$refs.input.equation = equation;
           this.$refs.input.graph();
         },
-        updateCoefficient: function(val) {
+        updateCoefficient(val) {
           this.$refs.main.updateCoefficient(val.id, val.value);
         },
-        opacityUpdated: function(val) {
+        opacityUpdated(val) {
           this.$refs.main.setOpacity(val.value);
         },
-        greyscaleUpdated: function(val) {
+        greyscaleUpdated(val) {
           this.$refs.main.setGreyscale(val);
         },
-        rUpdated: function(val) {
+        rUpdated(val) {
           this.$refs.main.setR(val.value);
         },
-        brightnessUpdated: function(val) {
+        brightnessUpdated(val) {
           this.$refs.main.setBrightness(val.value);
         },
-        xBoundsUpdated: function(val) {
+        xBoundsUpdated(val) {
           this.$refs.main.setXBounds(val.value);
         },
-        yBoundsUpdated: function(val) {
+        yBoundsUpdated(val) {
           this.$refs.main.setYBounds(val.value);
         },
-        zBoundsUpdated: function(val) {
+        zBoundsUpdated(val) {
           this.$refs.main.setZBounds(val.value);
         },
-        variableUpdated: function(val) {
+        variableUpdated(val) {
           this.$refs.main.updateCoefficient(val.id, val.value);
+        },
+        closeTip() {
+          this.showTip = false;
+          this.ignoreTip();
         },
       },
       computed: {
