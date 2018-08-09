@@ -26,6 +26,7 @@ title: Michael Firmin
         <button @click="example('clebsch')">Clebsch Diagonal Cubic</button>
         <button @click="example('kiss')">Kiss Surface</button>
         <button @click="example('plane')">Simple Plane</button>
+        <button @click="example('sphere')">Sphere</button>
         <button @click="example('sin')">z=sin(xy)</button>
         </div>
       </div>
@@ -317,6 +318,9 @@ title: Michael Firmin
             case 'sin':
               equation = 'sin(1x*y) - 1z';
               break;
+            case 'sphere':
+              equation = 'x^2 + y^2 + z^2 - (r - 1)^2';
+              break;
             default:
               // Error, unknown example!
               return;
@@ -364,6 +368,19 @@ title: Michael Firmin
         closeTip() {
           this.ignoreTip();
         },
+
+        getVariables(eqn, variables) {
+            for (let i = 0; i < eqn.length; i++) {
+              if (eqn[i].type === 'variable' && variables[eqn[i].id] === undefined) {
+                variables[eqn[i].id] = {
+                  value: eqn[i].value,
+                  id: (nodeId++).toString(),
+                };
+              } else if (eqn[i].type === 'power') {
+                this.getVariables(eqn[i].value, variables);
+              }
+            }
+        }
       },
       computed: {
         equationHtml() {
@@ -372,14 +389,7 @@ title: Michael Firmin
             const node = FG.math.parse(this.equation);
             toHtml(node, output);
             const variables = {};
-            for (let i = 0; i < output.length; i++) {
-              if (output[i].type === 'variable' && variables[output[i].id] === undefined) {
-                variables[output[i].id] = {
-                  value: output[i].value,
-                  id: (nodeId++).toString(),
-                };
-              }
-            }
+            this.getVariables(output, variables);
             this.$nextTick(() => {
               this.$refs.main.setEquation(output);
               this.variables = variables;
