@@ -175,6 +175,7 @@ Vue.component('controls', {
                 <p>
                     <div v-for="(value, name) in variables">
                         {{ name }}: <drag-number
+                            :ref="name"
                             :key="value.id"
                             :id="name"
                             :resolution="0.02"

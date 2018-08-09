@@ -37,6 +37,7 @@ title: Michael Firmin
       v-if="state === 'graphing'">
       <controls
         class="controls"
+        ref="controls"
         :show-tip="showTip"
         :variables="variables"
         @opacity-updated="opacityUpdated"
@@ -319,7 +320,11 @@ title: Michael Firmin
               equation = 'sin(1x*y) - 1z';
               break;
             case 'sphere':
-              equation = 'x^2 + y^2 + z^2 - (r - 1)^2';
+              equation = 'x^2 + y^2 + z^2 - r^2';
+              // hacky, but it works...
+              setTimeout(() => {
+                this.$refs.controls.$refs.r[0].value = 1;
+              }, 30);
               break;
             default:
               // Error, unknown example!
