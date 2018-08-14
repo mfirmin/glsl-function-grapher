@@ -4,6 +4,7 @@ import { FunctionGrapher } from '../functionGrapher';
 Vue.component('main-graph', {
     data() {
         return {
+            fullscreen: false,
             fg: null,
             outerStyle: {
                 'box-shadow': '1px 1px 1px grey',
@@ -14,6 +15,13 @@ Vue.component('main-graph', {
                 height: '100%',
                 'border-radius': '2px',
             },
+            fullscreenIconStyle: {
+                color: '#ccc',
+                position: 'absolute',
+                top: '5px',
+                right: '5px',
+                cursor: 'pointer',
+            },
         };
     },
     mounted() {
@@ -21,8 +29,14 @@ Vue.component('main-graph', {
         this.fg.go();
     },
     template: `
-        <div :style="outerStyle">
+        <div :style="outerStyle" :class="{ fullscreen }">
             <div ref="container" :style="innerStyle"></div>
+            <v-icon
+                large
+                :style="fullscreenIconStyle"
+                @click="fullscreen = !fullscreen"
+            >{{ fullscreen ? 'fullscreen_exit' : 'fullscreen' }}</v-icon>
+
         </div>
     `,
     methods: {
@@ -76,6 +90,13 @@ Vue.component('main-graph', {
         },
         updateCoefficient(id, value) {
             this.fg.updateCoefficient(id, value);
+        },
+    },
+    watch: {
+        fullscreen() {
+            this.$nextTick(() => {
+                this.fg.renderer.setSize(this.$el.offsetWidth, this.$el.offsetHeight);
+            });
         },
     },
 });

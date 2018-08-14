@@ -2,7 +2,8 @@
 
 html, body {
     max-width: 100%;
-    overflow-x: visible;
+    overflow-x: hidden;
+    overflow-y: hidden;
 }
 
 body {
@@ -48,6 +49,15 @@ button {
 .graph {
     position: absolute;
     top: 55px;
+}
+
+.graph.fullscreen {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1000;
 }
 
 .controls {
