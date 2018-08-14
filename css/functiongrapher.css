@@ -10,6 +10,12 @@ body {
     background-color: #ccc
 }
 
+#links {
+    position: absolute;
+    bottom: 10px;
+    left: calc(50% - 40px);
+}
+
 button {
     background-color: #73747a;
     border: none;
